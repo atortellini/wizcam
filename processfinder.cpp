@@ -1,5 +1,7 @@
 #include <tl32help.h>
 #include <psapi.h>
+#include <memoryapi.h>
+#include <iostream>
 
 
 #define RDATA_OFF 0x271b000
@@ -58,8 +60,32 @@ static BYTE* FindModuleBaseAddr(const DWORD pid, const std::wstring& moduleName)
     return NULL;
 }
 
-BOOL WriteProtectedProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize) {
-    
+/* To use this function, open process handle must already have access rights of VM_OPERATION and VM_WRITE */
+static BOOL WriteProtectedProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize) {
+    DWORD OldProtect;
+    if (!VirtualProtectEx(hProcess, lpBaseAddress, 1, PAGE_READWRITE, &OldProtect)) {
+        std::cerr << "Failed to change protections on page.\n";
+        return FALSE;
+    }
+    SIZE_T TotalBytesWritten = 0;
+    SIZE_T NumberOfBytesWritten = 0;
+    BOOL write_err = FALSE:
+
+    while (TotalBytesWritten < nSize) {
+        if(!WriteProcessMemory(hProcess, lpBaseAddress + TotalBytesWritten, lpBuffer + TotalBytesWritten, nSize - TotalBytesWritten, &NumberOfBytesWritten)) {
+            std::cerr << "Failed to write to process memory.\n";
+            write_err = TRUE;
+            break;
+        }
+        TotalBytesWritten += NumberOfBytesWritten;
+    }
+
+    if (!VirtualProtectEx(hProcess, lpBaseAddress, 1, OldProtect, &OldProtect)) {
+        std::cerr << "Failed to change back protections on page.\n"; // Not sure how this would happen but in this scenario the memory write would have already occurred.
+    }
+    if (write_err) return FALSE;
+    return TRUE;
+
 }
 
 
@@ -90,9 +116,16 @@ int main(void) {
         std::cerr << "Couldn't open handle to process.\n";
         return 1;
     }
-    WriteProtectedProcessMemory(hProcess, max_zoom_out0, &new_max, sizeof(FLOAT));
-    WriteProtectedProcessMemory(hProcess, max_zoom_out1, &new_max, sizeof(FLOAT));
+    if (!WriteProtectedProcessMemory(hProcess, max_zoom_out0, &new_max, sizeof(FLOAT))) {
+        CloseHandle(hProcess);
+        return 1;
+    }
+    if (!WriteProtectedProcessMemory(hProcess, max_zoom_out1, &new_max, sizeof(FLOAT))) {
+        CloseHandle(hProcess);
+        return 1;
+    }
 
     CloseHandle(hProcess);
+    return 0;
     
 }
