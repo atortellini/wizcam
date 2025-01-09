@@ -1,4 +1,5 @@
-#include <tl32help.h>
+#include <windows.h>
+#include <tlhelp32.h>
 #include <psapi.h>
 #include <memoryapi.h>
 #include <iostream>
@@ -7,9 +8,8 @@
 #define RDATA_OFF 0x271b000
 #define CAM_MAX_OZOOM_OFF0 0x4849a4
 #define CAM_MAX_OZOOM_OFF1 0x485dd0
-#define NEW_CAM_MAX_ZOOM_LIMIT 8000.f
 
-static DWORD FindPIDByName(const std::wstring& processName) {
+static DWORD FindPIDByName(const std::string& processName) {
     HANDLE snapshot;
     if ((snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)) == INVALID_HANDLE_VALUE) {
         std::cerr << "Failed to create snapshot of all processes.\n";
@@ -35,9 +35,9 @@ static DWORD FindPIDByName(const std::wstring& processName) {
 
 }
 
-static BYTE* FindModuleBaseAddr(const DWORD pid, const std::wstring& moduleName) {
+static BYTE* FindModuleBaseAddr(const DWORD pid, const std::string& moduleName) {
     HANDLE snapshot;
-    if ((CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid)) == INVALID_HANDLE_VALUE) {
+    if ((snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid)) == INVALID_HANDLE_VALUE) {
         std::cerr << "Failed to create snapshot of process modules.\n";
         return NULL;
     }
@@ -67,17 +67,12 @@ static BOOL WriteProtectedProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, L
         std::cerr << "Failed to change protections on page.\n";
         return FALSE;
     }
-    SIZE_T TotalBytesWritten = 0;
-    SIZE_T NumberOfBytesWritten = 0;
-    BOOL write_err = FALSE:
+  
+    BOOL write_err = FALSE;
 
-    while (TotalBytesWritten < nSize) {
-        if(!WriteProcessMemory(hProcess, lpBaseAddress + TotalBytesWritten, lpBuffer + TotalBytesWritten, nSize - TotalBytesWritten, &NumberOfBytesWritten)) {
-            std::cerr << "Failed to write to process memory.\n";
-            write_err = TRUE;
-            break;
-        }
-        TotalBytesWritten += NumberOfBytesWritten;
+    if (!WriteProcessMemory(hProcess, lpBaseAddress, lpBuffer, nSize, NULL)) {
+        std::cerr << "Failed to write to process memory.\n";
+        write_err = TRUE;
     }
 
     if (!VirtualProtectEx(hProcess, lpBaseAddress, 1, OldProtect, &OldProtect)) {
@@ -90,8 +85,8 @@ static BOOL WriteProtectedProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, L
 
 
 int main(void) {
-    std::wstring procName = L"WizardGraphicalClient.exe";
-    std::wstring modName = L"WizardGraphicalClient.exe";
+    std::string procName = "WizardGraphicalClient.exe";
+    std::string modName = "WizardGraphicalClient.exe";
 
     DWORD pid = FindPIDByName(procName);
     if (!pid) {
@@ -109,23 +104,27 @@ int main(void) {
     BYTE *max_zoom_out0 = rdata_base + CAM_MAX_OZOOM_OFF0;
     BYTE *max_zoom_out1 = rdata_base + CAM_MAX_OZOOM_OFF1;
 
-    FLOAT new_max = NEW_CAM_MAX_ZOOM_LIMIT;
+    FLOAT new_max;
+    while (TRUE) {
+        std::cout << "New max zoom value: ";
+        std::cin >> new_max;
+        HANDLE hProcess;
+        if (!(hProcess = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_WRITE, FALSE, pid))) {
+            std::cerr << "Couldn't open handle to process.\n";
+            return 1;
+        }
+        if (!WriteProtectedProcessMemory(hProcess, max_zoom_out0, &new_max, sizeof(FLOAT))) {
+            CloseHandle(hProcess);
+            return 1;
+        }
+        if (!WriteProtectedProcessMemory(hProcess, max_zoom_out1, &new_max, sizeof(FLOAT))) {
+            CloseHandle(hProcess);
+            return 1;
+        }
 
-    HANDLE hProcess;
-    if (!(hProcess = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_WRITE, FALSE, pid))) {
-        std::cerr << "Couldn't open handle to process.\n";
-        return 1;
-    }
-    if (!WriteProtectedProcessMemory(hProcess, max_zoom_out0, &new_max, sizeof(FLOAT))) {
         CloseHandle(hProcess);
-        return 1;
     }
-    if (!WriteProtectedProcessMemory(hProcess, max_zoom_out1, &new_max, sizeof(FLOAT))) {
-        CloseHandle(hProcess);
-        return 1;
-    }
-
-    CloseHandle(hProcess);
-    return 0;
     
+    return 0;
 }
+
