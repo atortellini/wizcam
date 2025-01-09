@@ -5,9 +5,9 @@
 
 
 #define RDATA_OFF 0x271b000
-#define CAM_MAX_OZOOM_OFF0
-#define CAM_MAX_OZOOM_OFF1
-#define NEW_CAM_MAX_ZOOM_LIMIT 8000f;
+#define CAM_MAX_OZOOM_OFF0 0x4849a4
+#define CAM_MAX_OZOOM_OFF1 0x485dd0
+#define NEW_CAM_MAX_ZOOM_LIMIT 8000.f
 
 static DWORD FindPIDByName(const std::wstring& processName) {
     HANDLE snapshot;
