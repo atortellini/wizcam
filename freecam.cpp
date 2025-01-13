@@ -1,4 +1,4 @@
-#include "Camera.h"
+#include "freecam.h"
 /* First cam struct field pointerchain:
  * BA:   ["WizardGraphicalClient.exe" + 0x34e1908] = a0
  * OFF0: [a0 + 0x80] = a1
