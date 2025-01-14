@@ -7,9 +7,7 @@
 
 class Camera {
     private:
-    uintptr_t cambaseaddr;
-    HANDLE hProcess;
-
+    Patcher& patcher;
     std::mutex camlock;
     std::atomic<bool> dirtycam;
 
@@ -23,7 +21,7 @@ class Camera {
     } localCameraData;
     
     public:
-    Camera(HANDLE process, uintptr_t baseaddr);
+    Camera(Patcher& p);
 
     /* Reads all fields of game cam from process' memory */
     void syncFromGame();

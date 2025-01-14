@@ -1,40 +1,14 @@
 #include "freecam.h"
-/* First cam struct field pointerchain:
- * BA:   ["WizardGraphicalClient.exe" + 0x34e1908] = a0
- * OFF0: [a0 + 0x80] = a1
- * OFF1: [a1 + 0x1e8] = a2
- * OFF2: [a2 + 0x288] = a3
- * OFF3: [a3 + 0x80] = a4
- * OFF4: [a4 + 0x9a8] = a5
- * OFF5: [a5 + 0x180] = a6
- * OFF6: [a6 + 0x6c] = a7 
 
- * INSTRUCTION MODIFYING X/Y:
- * ["WizardGraphicalClient.exe" + 0x18298bd]; 5 bytes
-
- * INSTRUCTION MODIFYING Z:
- * ["WizardGraphicalClient.exe" + 0x18298c5]; 3 bytes
-
- * INSTRUCTION MODIFYING PITCH:
- * ["WizardGraphicalClient.exe" + 0x1829768]; 5 Bytes
-
- * INSTRUCTION MODIFYING ROLL:
- * N/A
-
- * INSTRUCTION MODIFYING YAW:
- * ["WizardGraphicalClient.exe" + 0x182968f]; 5 Bytes
- */
-
-Camera::Camera(HANDLE process, uintptr_t baseaddr) 
-    : hProcess(process), cambaseaddr(baseaddr) {
+Camera::Camera(Patcher& p)
+    : patcher(p) {
     syncFromGame();
 }
 
 void Camera::syncFromGame() {
     struct GameCamera tmpCameraData;
-    if (!ReadProcessMemory(hProcess, (void*)cambaseaddr, &tmpCameraData, sizeof(tmpCameraData), NULL)) {
-        std::cerr << "Failed to read process memory." << std::endl;
-    }
+    patcher.retrieveCamData(&tmpCameraData, sizeof(tmpCameraData));
+    
     camlock.lock();
     localCameraData = tmpCameraData;
     dirtycam.store(false);
@@ -47,9 +21,8 @@ void Camera::syncToGame() {
         struct GameCamera tmpCameraData = localCameraData;
         dirtycam.store(false);
         camlock.unlock();
-        if (!WriteProcessMemory(hProcess, (void*)cambaseaddr, &tmpCameraData, sizeof(tmpCameraData), NULL)) {
-            std::cerr << "Failed to write process memory." << std::endl;
-        }
+
+        patcher.setCamData(&tmpCameraData, sizeof(tmpCameraData));
     }
 }
 
