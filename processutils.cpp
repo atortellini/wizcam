@@ -54,9 +54,9 @@ namespace ProcessUtils {
     }
 
     /* To use this function, open process handle must already have access rights of VM_OPERATION and VM_WRITE */
-    BOOL WriteProtectedProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize) {
+    BOOL WriteProtectedProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, DWORD newProtect) {
         DWORD OldProtect;
-        if (!VirtualProtectEx(hProcess, lpBaseAddress, 1, PAGE_READWRITE, &OldProtect)) {
+        if (!VirtualProtectEx(hProcess, lpBaseAddress, 1, newProtect, &OldProtect)) {
             std::cerr << "Failed to change protections on page.\n";
             return FALSE;
         }

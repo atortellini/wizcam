@@ -15,6 +15,6 @@ namespace ProcessUtils {
     BYTE *FindModuleBaseAddr(const DWORD pid, const std::string& moduleName);
 
     /* Write to a process's memory that is protected. */
-    BOOL WriteProtectedProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize);
-    
+    BOOL WriteProtectedProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, DWORD newProtect);
+
 }
