@@ -1,9 +1,8 @@
-#include <windows.h>
-#include <tlhelp32.h>
-#include <psapi.h>
-#include <memoryapi.h>
-#include <iostream>
 #include "processutils.h"
+
+#include <iostream>
+#include <stdexcept>
+
 
 
 #define RDATA_OFF 0x271b000
@@ -14,44 +13,36 @@ int main(void) {
 
     std::string procName = "WizardGraphicalClient.exe";
     std::string modName = "WizardGraphicalClient.exe";
-
-    DWORD pid = ProcessUtils::FindPIDByName(procName);
-    if (!pid) {
-        std::cerr << "Process couldn't be found.\n";
-        return 1;
-    }
-
-    BYTE *baseaddr = ProcessUtils::FindModuleBaseAddr(pid, modName);
-    if (!baseaddr) {
-        std::cerr << "Couldn't find module in process address space.\n";
-        return 1;
-    }
-
-    BYTE *rdata_base = baseaddr + RDATA_OFF;
-    BYTE *max_zoom_out0 = rdata_base + CAM_MAX_OZOOM_OFF0;
-    BYTE *max_zoom_out1 = rdata_base + CAM_MAX_OZOOM_OFF1;
-
+    HANDLE hProcess = NULL;
     FLOAT new_max;
-    while (TRUE) {
-        std::cout << "New max zoom value: ";
-        std::cin >> new_max;
-        HANDLE hProcess;
-        if (!(hProcess = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_WRITE, FALSE, pid))) {
-            std::cerr << "Couldn't open handle to process.\n";
-            return 1;
-        }
-        if (!ProcessUtils::WriteProtectedProcessMemory(hProcess, max_zoom_out0, &new_max, sizeof(FLOAT), PAGE_READWRITE)) {
-            CloseHandle(hProcess);
-            return 1;
-        }
-        if (!ProcessUtils::WriteProtectedProcessMemory(hProcess, max_zoom_out1, &new_max, sizeof(FLOAT), PAGE_READWRITE)) {
-            CloseHandle(hProcess);
-            return 1;
-        }
 
-        CloseHandle(hProcess);
-    }
+    try {
+        DWORD pid = ProcessUtils::FindPIDByName(procName);
+        BYTE *baseaddr = ProcessUtils::FindModuleBaseAddr(pid, modName);
     
-    return 0;
+        BYTE *rdata_base = baseaddr + RDATA_OFF;
+        BYTE *max_zoom_out0 = rdata_base + CAM_MAX_OZOOM_OFF0;
+        BYTE *max_zoom_out1 = rdata_base + CAM_MAX_OZOOM_OFF1;
+
+        while (TRUE) {
+            std::cout << "New max zoom value: ";
+            std::cin >> new_max;
+            if (!(hProcess = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_WRITE, FALSE, pid))) {
+                std::cerr << "Couldn't open handle to process.\n";
+                return 1;
+            }
+            ProcessUtils::WriteProtectedProcessMemory(hProcess, max_zoom_out0, &new_max, sizeof(FLOAT), PAGE_READWRITE);
+            ProcessUtils::WriteProtectedProcessMemory(hProcess, max_zoom_out1, &new_max, sizeof(FLOAT), PAGE_READWRITE);
+
+            CloseHandle(hProcess);
+            hProcess = NULL;
+        }
+        
+        return 0;
+    } catch (std::runtime_error& e) {
+        std::cerr << "Runtime Error: " << e.what() << std::endl;
+        if (hProcess) CloseHandle(hProcess);
+        return 1;
+    }
 }
 
