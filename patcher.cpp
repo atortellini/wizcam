@@ -39,43 +39,15 @@ Patcher::Patcher() {
     */
 
    /* Traversing the pointer chain to retieve the first field of wiz's camera struct */
-    uintptr_t tmp;
-    tmp = gameBaseAddr + 0x34e1908;
-    if (!ReadProcessMemory(gameProcess, (void *)tmp, &tmp, sizeof(tmp), NULL)) {
-        std::cerr << "Error: Could not read process memory at address 0x" << std::hex << tmp << std::dec << std::endl;
-        exit(1);
+    uintptr_t tmp = gameBaseAddr;
+
+    for (uintptr_t offset : {0x34e1908, 0x80, 0x1e8, 0x288, 0x80, 0x9a8, 0x180, 0x6c}) {
+        tmp += offset;
+        if (!ReadProcessMemory(gameProcess, (void *)tmp, &tmp, sizeof(tmp), NULL)) {
+            std::cerr << "Error: Could not read process memory at address 0x" << std::hex << tmp << ". Offset 0x" << offset << std::dec << std::endl;
+            exit(1);
+        }
     }
-    tmp += 0x80;
-    if (!ReadProcessMemory(gameProcess, (void *)tmp, &tmp, sizeof(tmp), NULL)) {
-        std::cerr << "Error: Could not read process memory at address 0x" << std::hex << tmp << std::dec << std::endl;
-        exit(1);
-    }
-    tmp += 0x1e8;
-    if (!ReadProcessMemory(gameProcess, (void *)tmp, &tmp, sizeof(tmp), NULL)) {
-        std::cerr << "Error: Could not read process memory at address 0x" << std::hex << tmp << std::dec << std::endl;
-        exit(1);
-    }
-    tmp += 0x288;
-    if (!ReadProcessMemory(gameProcess, (void *)tmp, &tmp, sizeof(tmp), NULL)) {
-        std::cerr << "Error: Could not read process memory at address 0x" << std::hex << tmp << std::dec << std::endl;
-        exit(1);
-    }
-    tmp += 0x80;
-    if (!ReadProcessMemory(gameProcess, (void *)tmp, &tmp, sizeof(tmp), NULL)) {
-        std::cerr << "Error: Could not read process memory at address 0x" << std::hex << tmp << std::dec << std::endl;
-        exit(1);
-    }
-    tmp += 0x9a8;
-    if (!ReadProcessMemory(gameProcess, (void *)tmp, &tmp, sizeof(tmp), NULL)) {
-        std::cerr << "Error: Could not read process memory at address 0x" << std::hex << tmp << std::dec << std::endl;
-        exit(1);
-    }
-    tmp += 0x180;
-    if (!ReadProcessMemory(gameProcess, (void *)tmp, &tmp, sizeof(tmp), NULL)) {
-        std::cerr << "Error: Could not read process memory at address 0x" << std::hex << tmp << std::dec << std::endl;
-        exit(1);
-    }
-    tmp += 0x6c; /* TODO: NOT SURE IF THIS LAST ADDRESS IS THE ADDRESS OF THE CAM STRUCT OR IF IT CONTAINS THE ADDRESS OF THE CAM STRUCT */
 
     camBaseAddr = tmp;
 
