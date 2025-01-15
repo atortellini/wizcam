@@ -5,8 +5,7 @@ namespace ProcessUtils {
     DWORD FindPIDByName(const std::string& processName) {
         HANDLE snapshot;
         if ((snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)) == INVALID_HANDLE_VALUE) {
-            std::cerr << "Failed to create snapshot of all processes.\n";
-            return 0;
+            throw std::runtime_error("Failed to create snapshot of all processes.");
         }
 
         DWORD pid;
@@ -23,16 +22,17 @@ namespace ProcessUtils {
             } while (Process32Next(snapshot, &proc));
         }
         CloseHandle(snapshot);
-
-        return 0;
-
+        std::ostringstream oss;
+        oss << "Failed to find " << processName << " in snapshot of all processes."; 
+        throw std::runtime_error(oss.str());
     }
 
     BYTE* FindModuleBaseAddr(const DWORD pid, const std::string& moduleName) {
         HANDLE snapshot;
         if ((snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid)) == INVALID_HANDLE_VALUE) {
-            std::cerr << "Failed to create snapshot of process modules.\n";
-            return NULL;
+            std::ostringstream oss;
+            oss << "Failed to create snapshot of " << pid <<  "'s modules.";
+            throw std::runtime_error(oss.str());
         }
         
         BYTE *base;
@@ -50,29 +50,30 @@ namespace ProcessUtils {
         }
         
         CloseHandle(snapshot);
-        return NULL;
+        std::ostringstream oss;
+        oss << "Failed to find " << moduleName << " in snapshot of all modules mapped within process " << pid << ".";
+        throw std::runtime_error(oss.str());
     }
 
     /* To use this function, open process handle must already have access rights of VM_OPERATION and VM_WRITE */
-    BOOL WriteProtectedProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, DWORD newProtect) {
+    void WriteProtectedProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, DWORD newProtect) {
         DWORD OldProtect;
-        if (!VirtualProtectEx(hProcess, lpBaseAddress, 1, newProtect, &OldProtect)) {
-            std::cerr << "Failed to change protections on page.\n";
-            return FALSE;
+        if (!VirtualProtectEx(hProcess, lpBaseAddress, nSize, newProtect, &OldProtect)) {
+            std::ostringstream oss;
+            oss << "Failed to change protections on the memory page(s) containing addresses " << std::hex << reinterpret_cast<uintptr_t>(lpBaseAddress) << "-" << (reinterpret_cast<uintptr_t>(lpBaseAddress) + nSize);
+            throw std::runtime_error(oss.str());
         }
-    
-        BOOL write_err = FALSE;
 
         if (!WriteProcessMemory(hProcess, lpBaseAddress, lpBuffer, nSize, NULL)) {
-            std::cerr << "Failed to write to process memory.\n";
-            write_err = TRUE;
+            std::ostringstream oss;
+            oss << "Failed to write " << nSize << " bytes to process memory at address " << std::hex << reinterpret_cast<uintptr_t>(lpBaseAddress);
+            throw std::runtime_error(oss.str());
         }
 
-        if (!VirtualProtectEx(hProcess, lpBaseAddress, 1, OldProtect, &OldProtect)) {
-            std::cerr << "Failed to change back protections on page.\n"; // Not sure how this would happen but in this scenario the memory write would have already occurred.
+        if (!VirtualProtectEx(hProcess, lpBaseAddress, nSize, OldProtect, &OldProtect)) {
+            std::ostringstream oss;
+            oss << "Failed to change back protections on the memory page(s) containing addresses " << std::hex << reinterpret_cast<uintptr_t>(lpBaseAddress) << "-" << (reinterpret_cast<uintptr_t>(lpBaseAddress) + nSize);
+            throw std::runtime_error(oss.str()); // Not sure how this would happen but in this scenario the memory write would have already occurred.
         }
-        if (write_err) return FALSE;
-        return TRUE;
-
     }
 }
