@@ -40,11 +40,11 @@ int main(void) {
             std::cerr << "Couldn't open handle to process.\n";
             return 1;
         }
-        if (!ProcessUtils::WriteProtectedProcessMemory(hProcess, max_zoom_out0, &new_max, sizeof(FLOAT))) {
+        if (!ProcessUtils::WriteProtectedProcessMemory(hProcess, max_zoom_out0, &new_max, sizeof(FLOAT), PAGE_READWRITE)) {
             CloseHandle(hProcess);
             return 1;
         }
-        if (!ProcessUtils::WriteProtectedProcessMemory(hProcess, max_zoom_out1, &new_max, sizeof(FLOAT))) {
+        if (!ProcessUtils::WriteProtectedProcessMemory(hProcess, max_zoom_out1, &new_max, sizeof(FLOAT), PAGE_READWRITE)) {
             CloseHandle(hProcess);
             return 1;
         }
