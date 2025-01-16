@@ -5,16 +5,15 @@
 #include <atomic>
 #include <mutex>
 
+
+#define CAM_MOVE_SPEED 5
+
 class Camera {
     private:
     Patcher& patcher;
     std::mutex camlock;
     std::atomic<bool> dirtycam;
 
-    /* 
-     * TODO: GameCamera struct is used as a buffer so need to ensure my local struct is the 
-     * same size, alligned properly, same members, etc. as the game's cam struct 
-     */
     struct GameCamera {
         float x, y, z;
         float pitch, roll, yaw;
