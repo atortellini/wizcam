@@ -1,4 +1,8 @@
 #include "freecam.h"
+#include "patcher.h"
+
+#include <iostream>
+#include <stdexcept>
 
 Camera::Camera(Patcher& p)
     : patcher(p) {
@@ -7,8 +11,11 @@ Camera::Camera(Patcher& p)
 
 void Camera::syncFromGame() {
     struct GameCamera tmpCameraData;
-    patcher.retrieveCamData(&tmpCameraData, sizeof(tmpCameraData));
-    
+    try { 
+        patcher.retrieveCamData(&tmpCameraData, sizeof(tmpCameraData));
+    } catch (std::runtime_error& e) {
+        std::cerr < e.what() << std::endl;
+    }
     camlock.lock();
     localCameraData = tmpCameraData;
     dirtycam.store(false);
@@ -21,8 +28,11 @@ void Camera::syncToGame() {
         struct GameCamera tmpCameraData = localCameraData;
         dirtycam.store(false);
         camlock.unlock();
-
-        patcher.setCamData(&tmpCameraData, sizeof(tmpCameraData));
+        try {
+            patcher.setCamData(&tmpCameraData, sizeof(tmpCameraData));
+        } catch (std::runtime_error& e) {
+            std::cerr << e.what() << std::endl;
+        }
     }
 }
 
