@@ -38,7 +38,7 @@ void processInput(Patcher& p, Camera& cam) {
 
 int main(void) {
     Patcher p();
-    Camera cam();
+    Camera cam(p);
     std::thread input_thread(processInput, std::ref(p), std::ref(cam));
 
     while (true) {

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <windows.h>
-#include <iostream>
 #include <atomic>
 #include <mutex>
 

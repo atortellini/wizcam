@@ -138,7 +138,7 @@ void Patcher::patch() { /* Might want to halt all threads before writing to .tex
 
 void Patcher::unpatch() {
     try {
-        for (auto& instr : instructionAddresses) {
+        for (const auto& instr : instructionAddresses) {
             ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(gameBaseAddr + instr.offset), reinterpret_cast<LPVOID>(instr.orig_instr), instr.bytes, PAGE_EXECUTE_READWRITE);
         }
     } catch (std::runtime_error& e) {
