@@ -1,4 +1,4 @@
-#include "freecam.h"
+#include "camera.h"
 #include "patcher.h"
 
 #include <iostream>

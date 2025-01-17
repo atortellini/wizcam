@@ -1,5 +1,5 @@
 #include "patcher.h"
-#include "freecam.h"
+#include "camera.h"
 #include <winuser.h>
 #include <iostream>
 #include <functional>
