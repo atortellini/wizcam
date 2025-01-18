@@ -134,7 +134,7 @@ void Patcher::init() {
 }
 
 void Patcher::patch() { /* Might want to halt all threads before writing to .text pages and flushing instruction caches after. */
-    BYTE patch[MAX_ENCODED_INSTRUCTION_LENGTH] = { NOP, NOP, NOP, NOP, NOP };
+    BYTE patch[MAX_ENCODED_INSTRUCTION_LENGTH] = { NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP };
 
     try {
         ProcessUtils::HaltAllProcessThreads(gamePID);

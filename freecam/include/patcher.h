@@ -3,7 +3,7 @@
 #include <windows.h>
 #include <cstdint>
 
-#define MAX_ENCODED_INSTRUCTION_LENGTH 5
+#define MAX_ENCODED_INSTRUCTION_LENGTH 8
 #define NUM_INSTRUCTIONS_TO_UPDATE 4
 
 /**
