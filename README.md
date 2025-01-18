@@ -1,7 +1,10 @@
-## ISSUE: Might want to consider writing the instructions out into a file that can be read in to set the orig_instr member of each instruction_t struct
-- Benefit: If the program were to crash/close freecam when the patch was applied, could still return to a state of unpatched camera
+## ISSUE: If the program were to crash, or you close freecam when the patch was applied no way for camera to return to original state
 
-- Alternative Solution: On interrupt sig the original instructions are first written back
+### Possible Solution:
+- Keep the overwritten instructions in a file that will be read to set the orig_instr member of each instruction_t struct
+
+### Possible Solution:
+- On interrupt sig the original instructions are first written back
 
 ## ISSUE: Speed of cam movement is much too fast at 5.
 ### Observations:
@@ -24,16 +27,15 @@
 - There was no delay/debouncing when handling user keystrokes so way too many updates are likely occurring simply from one button press.
 - Added a 250ms debounce that the input thread will sleep for after each iteration of checking for keystates.
 
-## ISSUE: The free camera is only synced from the game once at the beginning of the program
-### Observation:
-- If you get lost with the freecam essentially screwed no way to reset the freecam back to your coords since its 'simulated' separately
-### Solution:
+## ISSUE: Since the free camera is only synced from the game at the beginning of the program, if you get lost in freecam mode no way to return back
+
+### Possible Solution:
 - Maybe consider syncing 'simulated' freecam camera back to the game either just after toggling off freecam or just before toggling on freecam
 
-### Alternative Solution:
-- Or, maybe, have a reset keybind to reset the camera back to your games camera while in freecam mode.
+### Possible Solution:
+- Have a reset keybind to reset the camera back to your games camera while in freecam mode.
 
-- This would mean I would have to keep a snapshot of the last game Camera state before toggling freecam
+- A snapshot of the last game Camera state needs to be taken before toggling freecam
 
 ## ISSUE: Movement of the camera feels very unintuitive
 ### Observations:
