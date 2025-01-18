@@ -1,19 +1,19 @@
 #include "camera.h"
 
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 
-Camera::Camera(Patcher& p)
-    : patcher(p) {
-    syncFromGame();
-}
+Camera::Camera(Patcher& p) : patcher(p) {}
 
 void Camera::syncFromGame() {
     struct GameCamera tmpCameraData;
     try { 
         patcher.retrieveCamData(&tmpCameraData, sizeof(tmpCameraData));
     } catch (std::runtime_error& e) {
-        std::cerr << e.what() << std::endl;
+        std::ostringstream oss;
+        oss << "Camera failed to sync: " << e.what();
+        throw std::runtime_error(oss);
     }
     camlock.lock();
     localCameraData = tmpCameraData;

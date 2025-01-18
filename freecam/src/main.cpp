@@ -2,6 +2,7 @@
 #include "camera.h"
 #include <winuser.h>
 #include <iostream>
+#include <stdexcept>
 #include <functional>
 #include <thread>
 #include <atomic>
@@ -16,10 +17,14 @@ void processInput(Patcher& p, Camera& cam) {
             bool new_state = !current_cam_toggle;
             freecamEnabled.store(new_state); 
             current_cam_toggle = new_state;
-            if (current_cam_toggle) {
-                p.patch();
-            } else {
-                p.unpatch();
+            try {
+                if (current_cam_toggle) {
+                    p.patch();
+                } else {
+                    p.unpatch();
+                }
+            } catch (std::runtime_error& e) {
+                std::cerr << e.what() << std::endl;
             }
         }
         if (current_cam_toggle) {
@@ -39,6 +44,14 @@ void processInput(Patcher& p, Camera& cam) {
 int main(void) {
     Patcher p;
     Camera cam(p);
+
+    try {
+        p.init();
+        cam.syncFromGame();
+    } catch (std::runtime_error& e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    }
     std::thread input_thread(processInput, std::ref(p), std::ref(cam));
 
     while (true) {
