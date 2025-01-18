@@ -44,3 +44,10 @@
 - z direction worked as expected
 ### Ideal:
 - Get the camera to a point where the forward vector is calculated and movement is based on that vector for the most intuitive experience
+
+
+## ISSUE: My input handling is pretty shitty
+
+### Observations:
+- When holding down the toggle freecam hotkey it switches quickly back and forth between patching/unpatching
+- Ideally would do nothing if the button is held

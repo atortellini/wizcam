@@ -6,7 +6,7 @@
 #include <mutex>
 
 
-#define CAM_MOVE_SPEED 5.
+#define CAM_MOVE_SPEED 40.
 
 class Camera {
     private:
