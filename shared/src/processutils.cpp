@@ -8,7 +8,6 @@
 #include <sstream>
 #include <string>
 #include <stdexcept>
-#include <vector>
 
 namespace ProcessUtils {
 
@@ -110,7 +109,7 @@ namespace ProcessUtils {
 
         CloseHandle(snapshot);
     }
-    
+
     void ResumseAllProcessThreads(const DWORD pid) {
         HANDLE snapshot;
         if ((snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0)) == INVALID_HANDLE_VALUE) {
