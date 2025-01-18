@@ -57,7 +57,7 @@ Patcher::Patcher() {
    instructionAddresses[0].bytes = 5;
    instructionAddresses[1].bytes = 3;
    instructionAddresses[2].bytes = 5;
-   instructionAddresses[3].bytes = 5;
+   instructionAddresses[3].bytes = 8;
 
    initialized = false;
 }
