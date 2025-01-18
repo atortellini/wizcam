@@ -1,53 +1,58 @@
-## ISSUE: If the program were to crash, or you close freecam when the patch was applied no way for camera to return to original state
+# Current Issues and Notes
 
-### Possible Solution:
-- Keep the overwritten instructions in a file that will be read to set the orig_instr member of each instruction_t struct
-
-### Possible Solution:
-- On interrupt sig the original instructions are first written back
-
-## ISSUE: Speed of cam movement is much too fast at 5.
+## ISSUE: The character continues to move in freecam mode
 ### Observations:
-- Tried setting it to 0.1/.1/0.1f and it was giving me truncated from double to float warnings and wasn't working
+- All keyboard events are still passed to the game's process while in freecam mode.
+- The game continues processing inputs, causing the character to move.
+- Modifying how the game handles input seems too complicated.
 
-- Maybe because 0.1 is more precise so it was defaulting to being a double, but then getting truncated to a float since all my arguemnts are floats
+---
 
-- Need to think about how I can slow the movement speed of the camera then since coords of cam in game's memory are floats
+## ISSUE: Camera state isn't restored if the program crashes or freecam is closed while patched
+### Possible Solutions:
+1. Keep the overwritten instructions in a file. This file will be read to set the `orig_instr` member of each `instruction_t` struct.
+2. Use an interrupt signal (`SIGINT`) to ensure the original instructions are written back before the program exits.
 
-- x/y is treated as a double but they're combined so it's essentially two floats
+---
 
-- Or maybe something more is going on and me treating it like two floats is why the movement seems unpredictable
+## ISSUE: Free camera only syncs with the game at startup
+### Notes:
+- If you get lost in freecam mode, there's no way to return to the game's camera position.
+- This issue also occurs when changing zones.
 
-- Maybe can do an experiment where I just monitor the camera values in cheat engine as they are naturally updated while I run around in wizard101
+### Possible Solutions:
+1. Sync the freecam camera back to the game:
+   - Just after toggling freecam off.
+   - Just before toggling freecam on.
+2. Add a reset keybind to restore the freecam to the game's current camera position.
+   - Take a snapshot of the last game camera state before toggling freecam.
 
-- 0.5 had no warnings when compiling and worked, but was still too fast
+---
 
-### Possible Solution:
-- Had an epiphany while sleeping that maybe the reason the camera speed seems to be too fast is due to how quickly the input handler thread is updating the local camera.
-- There was no delay/debouncing when handling user keystrokes so way too many updates are likely occurring simply from one button press.
-- Added a 250ms debounce that the input thread will sleep for after each iteration of checking for keystates.
-
-## ISSUE: Since the free camera is only synced from the game at the beginning of the program, if you get lost in freecam mode no way to return back
-
-### Possible Solution:
-- Maybe consider syncing 'simulated' freecam camera back to the game either just after toggling off freecam or just before toggling on freecam
-
-### Possible Solution:
-- Have a reset keybind to reset the camera back to your games camera while in freecam mode.
-
-- A snapshot of the last game Camera state needs to be taken before toggling freecam
-
-## ISSUE: Movement of the camera feels very unintuitive
+## ISSUE: Camera movement feels unintuitive
 ### Observations:
-- The movement in x/y direction seems very unpredictable, at least from the little testing I was able to do
+- Movement along the x, y, and z axes is predictable.
+- Inability to change yaw or pitch makes movement feel unintuitive.
+- The freecam doesn't sync from the game's values beyond the initial setup, making yaw/pitch static.
 
-- z direction worked as expected
-### Ideal:
-- Get the camera to a point where the forward vector is calculated and movement is based on that vector for the most intuitive experience
+### Ideal Solution:
+- Calculate a forward vector for the camera and base movement on it for more intuitive controls.
+- Capture mouse input to adjust pitch and yaw dynamically.
 
+---
 
-## ISSUE: My input handling is pretty shitty
-
+## ISSUE: Input handling is poor
 ### Observations:
-- When holding down the toggle freecam hotkey it switches quickly back and forth between patching/unpatching
-- Ideally would do nothing if the button is held
+- Holding down the toggle freecam hotkey causes rapid toggling between patching and unpatching.
+- Ideally, holding the button would have no effect after the first toggle.
+
+---
+
+# Past Issues
+
+<details>
+<summary>ISSUE: Camera movement speed was too fast at 5.</summary>
+
+- The high speed was due to the input handler thread processing inputs too quickly.
+- Adding a debounce to the input thread (33ms delay) highlighted that a movement speed of `5.0` was actually slow.
+</details>
