@@ -1,5 +1,4 @@
 #include "camera.h"
-#include "patcher.h"
 
 #include <iostream>
 #include <stdexcept>

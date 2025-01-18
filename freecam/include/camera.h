@@ -1,10 +1,12 @@
 #pragma once
 
+#include "patcher.h"
+
 #include <atomic>
 #include <mutex>
 
 
-#define CAM_MOVE_SPEED 5
+#define CAM_MOVE_SPEED 5.
 
 class Camera {
     private:
