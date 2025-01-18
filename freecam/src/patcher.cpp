@@ -106,7 +106,7 @@ Patcher::Patcher() {
 
     /* Reading the original instructions into instruction_t structs so patches can be reverted */
     for (auto& instr : instructionAddresses) {
-        if (!ReadProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(gameBaseAddr + instr.offset), reinterpret_cast<LPVOID>(instr.orig_instr), instr.bytes)) {
+        if (!ReadProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(gameBaseAddr + instr.offset), reinterpret_cast<LPVOID>(instr.orig_instr), instr.bytes, NULL)) {
             std::ostringstream oss;
             oss << "Patcher constructor failed: " << "Could not read instructions in process memory at address 0x" << std::hex << gameBaseAddr + instr.offset;
             throw std::runtime_error(oss.str());
