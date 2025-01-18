@@ -19,6 +19,11 @@
 
 - 0.5 had no warnings when compiling and worked, but was still too fast
 
+### Possible Solution:
+- Had an epiphany while sleeping that maybe the reason the camera speed seems to be too fast is due to how quickly the input handler thread is updating the local camera.
+- There was no delay/debouncing when handling user keystrokes so way too many updates are likely occurring simply from one button press.
+- Added a 250ms debounce that the input thread will sleep for after each iteration of checking for keystates.
+
 ## ISSUE: The free camera is only synced from the game once at the beginning of the program
 ### Observation:
 - If you get lost with the freecam essentially screwed no way to reset the freecam back to your coords since its 'simulated' separately

@@ -35,6 +35,7 @@ void processInput(Patcher& p, Camera& cam) {
             if (GetAsyncKeyState(VK_SPACE) & 0x8000) cam.moveZ(CAM_MOVE_SPEED);
             if (GetAsyncKeyState(VK_CONTROL) & 0x8000) cam.moveZ(-CAM_MOVE_SPEED);
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(250));
         
     }
     std::this_thread::yield();
