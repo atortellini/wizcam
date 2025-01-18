@@ -6,7 +6,6 @@
 #include <processthreadsapi.h>
 #include <iostream>
 #include <sstream>
-#include <string>
 #include <stdexcept>
 
 namespace ProcessUtils {
@@ -110,7 +109,7 @@ namespace ProcessUtils {
         CloseHandle(snapshot);
     }
 
-    void ResumseAllProcessThreads(const DWORD pid) {
+    void ResumeAllProcessThreads(const DWORD pid) {
         HANDLE snapshot;
         if ((snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0)) == INVALID_HANDLE_VALUE) {
             throw std::runtime_error("Failed to create snapshot of all threads.");

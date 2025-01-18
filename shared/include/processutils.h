@@ -2,6 +2,7 @@
 #define PROCESSUTILS_H
 
 #include <windows.h>
+#include <string>
 
 namespace ProcessUtils {
 
