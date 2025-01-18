@@ -69,7 +69,7 @@ Patcher::Patcher() {
         tmp += POINTER_OFFSET_CHAIN[i];
         if (!ReadProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(tmp), reinterpret_cast<LPVOID>(&tmp), sizeof(tmp), NULL)) {
             std::ostringstream oss;
-            oss << "Patcher constructor failed: " << "Failed traversing pointer chain.\n" << "Could not read process memory at address 0x" << std::hex << tmp << ". Offset 0x" << offset;
+            oss << "Patcher constructor failed: " << "Failed traversing pointer chain.\n" << "Could not read process memory at address 0x" << std::hex << tmp << ". Offset 0x" << POINTER_OFFSET_CHAIN[i];
             throw std::runtime_error(oss.str());
         }
     }
@@ -164,7 +164,7 @@ void Patcher::unpatch() {
 }
 
 void Patcher::retrieveCamData(void *buff, size_t nSize) const {
-    if (!ReadProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(camBaseAddr), buff, nSize)) {
+    if (!ReadProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(camBaseAddr), buff, nSize, NULL)) {
         std::ostringstream oss;
         oss << "Failed to retrieve camera data: " << "Could not read camera data in process memory at address 0x" << std::hex << camBaseAddr;
         throw std::runtime_error(oss.str());
