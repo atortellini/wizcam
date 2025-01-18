@@ -23,9 +23,9 @@ namespace {
     constexpr uintptr_t OFFSET_0 = 0x80;
     constexpr uintptr_t OFFSET_1 = 0x1e8;
     constexpr uintptr_t OFFSET_2 = 0x288;
-    constexpr uintptr_t OFFSET_3 = 0x80;
-    constexpr uintptr_t OFFSET_4 = 0x9a8;
-    constexpr uintptr_t OFFSET_5 = 0x180;
+    constexpr uintptr_t OFFSET_3 = 0x150;
+    constexpr uintptr_t OFFSET_4 = 0xe0;
+    constexpr uintptr_t OFFSET_5 = 0x348;
     constexpr uintptr_t OFFSET_6 = 0x6c;
 
     constexpr uintptr_t POINTER_OFFSET_CHAIN[] = { BASE_OFFSET, OFFSET_0, OFFSET_1, OFFSET_2, OFFSET_3, OFFSET_4, OFFSET_5, OFFSET_6 };
