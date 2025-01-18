@@ -44,7 +44,7 @@ Patcher::Patcher() {
     }
     
     gameProcess = hProcess;
-    gameBaseAddr = baseaddr;
+    gameBaseAddr = reinterpret_cast<uintptr_t>(baseaddr);
 
      /* First cam struct field pointerchain:
     * BA:   ["WizardGraphicalClient.exe" + 0x34e1908] = a0
@@ -125,7 +125,7 @@ void Patcher::patch() { /* Might want to halt all threads before writing to .tex
     BYTE patch[MAX_ENCODED_INSTRUCTION_LENGTH] = { NOP, NOP, NOP, NOP, NOP };
     try {
         for (const auto& instr : instructionAddresses) {
-            ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(gameBaseAddr + instr.offset), reinterpret_cast<LPVOID>(patch), instr.bytes, PAGE_EXECUTE_READWRITE);
+            ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPVOID>(gameBaseAddr + instr.offset), reinterpret_cast<LPCVOID>(patch), instr.bytes, PAGE_EXECUTE_READWRITE);
         }
     } catch (std::runtime_error& e) {
         std::ostringstream oss;
@@ -138,7 +138,7 @@ void Patcher::patch() { /* Might want to halt all threads before writing to .tex
      * lpBaseAddress - smallest instruction address modified from instructionAddresses arr
      * dwSize        - (max_instruction_address - min_instruction_address) + max_instruction_address.bytes 
      */
-    if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[3].offset), reinterpret_cast<LPCVOID>((instructionAddresses[1].offset - instructionAddresses[3].offset) + instructionAddresses[1].bytes))) {
+    if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[3].offset), (instructionAddresses[1].offset - instructionAddresses[3].offset) + instructionAddresses[1].bytes )) {
         throw std::runtime_error("Applying patch failed: Failed to flush instruction cache.");
     }
 }
@@ -146,7 +146,7 @@ void Patcher::patch() { /* Might want to halt all threads before writing to .tex
 void Patcher::unpatch() {
     try {
         for (const auto& instr : instructionAddresses) {
-            ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(gameBaseAddr + instr.offset), reinterpret_cast<LPVOID>(instr.orig_instr), instr.bytes, PAGE_EXECUTE_READWRITE);
+            ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPVOID>(gameBaseAddr + instr.offset), reinterpret_cast<LPCVOID>(instr.orig_instr), instr.bytes, PAGE_EXECUTE_READWRITE);
         }
     } catch (std::runtime_error& e) {
         std::ostringstream oss;
@@ -158,12 +158,12 @@ void Patcher::unpatch() {
      * lpBaseAddress - smallest instruction address modified from instructionAddresses arr
      * dwSize        - (max_instruction_address - min_instruction_address) + max_instruction_address.bytes 
      */
-    if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[3].offset), reinterpret_cast<LPCVOID>((instructionAddresses[1].offset - instructionAddresses[3].offset) + instructionAddresses[1].bytes))) {
+    if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[3].offset), (instructionAddresses[1].offset - instructionAddresses[3].offset) + instructionAddresses[1].bytes )) {
         throw std::runtime_error("Removing patch failed: Failed to flush instruction cache.");
     }
 }
 
-void Patcher::retrieveCamData(void *buff, size_t nSize) {
+void Patcher::retrieveCamData(void *buff, size_t nSize) const {
     if (!ReadProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(camBaseAddr), buff, nSize)) {
         std::ostringstream oss;
         oss << "Failed to retrieve camera data: " << "Could not read camera data in process memory at address 0x" << std::hex << camBaseAddr;
@@ -171,9 +171,9 @@ void Patcher::retrieveCamData(void *buff, size_t nSize) {
     }
 }
 
-void Patcher::setCamData(void *buff, size_t nSize) {
+void Patcher::setCamData(const void *buff, size_t nSize) const {
     try {
-        ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(camBaseAddr), buff, nSize, PAGE_EXECUTE_READWRITE);
+        ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPVOID>(camBaseAddr), buff, nSize, PAGE_EXECUTE_READWRITE);
     } catch (std::runtime_error& e) {
         std::ostringstream oss;
         oss << "Failed to set camera data: " << e.what();
