@@ -1,5 +1,15 @@
 #include "processutils.h"
 
+#include <tlhelp32.h>
+#include <psapi.h>
+#include <memoryapi.h>
+#include <processthreadsapi.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <stdexcept>
+#include <vector>
+
 namespace ProcessUtils {
 
     DWORD FindPIDByName(const std::string& processName) {
@@ -75,5 +85,53 @@ namespace ProcessUtils {
             oss << "Failed to change back protections on the memory page(s) containing addresses " << std::hex << reinterpret_cast<uintptr_t>(lpBaseAddress) << "-" << (reinterpret_cast<uintptr_t>(lpBaseAddress) + nSize);
             throw std::runtime_error(oss.str()); // Not sure how this would happen but in this scenario the memory write would have already occurred.
         }
+    }
+
+    void HaltAllProcessThreads(const DWORD pid) {
+        HANDLE snapshot;
+        if ((snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0)) == INVALID_HANDLE_VALUE) {
+            throw std::runtime_error("Failed to create snapshot of all threads.");
+        }
+
+        THREADENTRY32 thr;
+        thr.dwSize = sizeof(THREADENTRY32);
+
+        if (Thread32First(snapshot, &thr)) {
+            do {
+                if (thr.th32OwnerProcessID == pid) {
+                    HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, thr.th32ThreadID);
+                    if (hThread) {
+                        SuspendThread(hThread);
+                        CloseHandle(hThread);
+                    }
+                }
+            } while (Thread32Next(snapshot, &thr));
+        }
+
+        CloseHandle(snapshot);
+    }
+    
+    void ResumseAllProcessThreads(const DWORD pid) {
+        HANDLE snapshot;
+        if ((snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0)) == INVALID_HANDLE_VALUE) {
+            throw std::runtime_error("Failed to create snapshot of all threads.");
+        }
+
+        THREADENTRY32 thr;
+        thr.dwSize = sizeof(THREADENTRY32);
+
+        if (Thread32First(snapshot, &thr)) {
+            do {
+                if (thr.th32OwnerProcessID == pid) {
+                    HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, thr.th32ThreadID);
+                    if (hThread) {
+                        ResumeThread(hThread);
+                        CloseHandle(hThread);
+                    }
+                }
+            } while (Thread32Next(snapshot, &thr));
+        }
+
+        CloseHandle(snapshot);
     }
 }

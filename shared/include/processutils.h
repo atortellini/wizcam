@@ -2,13 +2,6 @@
 #define PROCESSUTILS_H
 
 #include <windows.h>
-#include <tlhelp32.h>
-#include <psapi.h>
-#include <memoryapi.h>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <stdexcept>
 
 namespace ProcessUtils {
 
@@ -43,6 +36,27 @@ BYTE* FindModuleBaseAddr(const DWORD pid, const std::string& moduleName);
  */
 void WriteProtectedProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, DWORD newProtect);
 
+/**
+ * @brief Suspends all threads of a specified process except for the calling thread.
+ * 
+ * @param pid The PID of the process whose threads should be suspended.
+ * @throws std::runtime_error if a thread snapshot cannot be created.
+ * 
+ * This function iterates through all threads belonging to the specified process
+ * and calls SuspendThread on each one.
+ */
+void HaltAllProcessThreads(const DWORD pid);
+
+/**
+ * @brief Resumes all threads of a specified process that were previously suspended.
+ * 
+ * @param pid The PID of the process whose threads should be resumed.
+ * @throws std::runtime_error if a thread snapshot cannot be created.
+ * 
+ * This function iterates through all threads belonging to the specified process
+ * and calls ResumeThread on each one.
+ */
+void ResumeAllProcessThreads(const DWORD pid);
 } // namespace ProcessUtils
 
 #endif // PROCESSUTILS_H
