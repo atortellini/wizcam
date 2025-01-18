@@ -13,7 +13,7 @@ void Camera::syncFromGame() {
     } catch (std::runtime_error& e) {
         std::ostringstream oss;
         oss << "Camera failed to sync: " << e.what();
-        throw std::runtime_error(oss);
+        throw std::runtime_error(oss.str());
     }
     camlock.lock();
     localCameraData = tmpCameraData;
