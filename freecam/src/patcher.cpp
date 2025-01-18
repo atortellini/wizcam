@@ -8,6 +8,17 @@
 namespace {
     constexpr BYTE NOP = 0x90;
 
+    /**
+     * First cam struct field pointerchain:
+     * BA:   ["WizardGraphicalClient.exe" + 0x34e1908] = a0
+     * OFF0: [a0 + 0x080] = a1
+     * OFF1: [a1 + 0x1e8] = a2
+     * OFF2: [a2 + 0x288] = a3
+     * OFF3: [a3 + 0x080] = a4
+     * OFF4: [a4 + 0x9a8] = a5
+     * OFF5: [a5 + 0x180] = a6
+     * OFF6:  a6 + 0x06c  = a7 
+     */
     constexpr uintptr_t BASE_OFFSET = 0x34e1908;
     constexpr uintptr_t OFFSET_0 = 0x80;
     constexpr uintptr_t OFFSET_1 = 0x1e8;
@@ -21,6 +32,48 @@ namespace {
 }
 
 Patcher::Patcher() {
+   
+   /*  INSTRUCTION MODIFYING X/Y:
+    * ["WizardGraphicalClient.exe" + 0x18298bd]; 5 bytes
+
+    * INSTRUCTION MODIFYING Z:
+    * ["WizardGraphicalClient.exe" + 0x18298c5]; 3 bytes
+
+    * INSTRUCTION MODIFYING PITCH:
+    * ["WizardGraphicalClient.exe" + 0x1829768]; 5 Bytes
+
+    * INSTRUCTION MODIFYING ROLL:
+    * N/A
+
+    * INSTRUCTION MODIFYING YAW:
+    * ["WizardGraphicalClient.exe" + 0x182968f]; 5 Bytes
+    */
+
+   instructionAddresses[0].offset = 0x18298bd;
+   instructionAddresses[1].offset = 0x18298c5;
+   instructionAddresses[2].offset = 0x1829768;
+   instructionAddresses[3].offset = 0x182968f;
+
+   instructionAddresses[0].bytes = 5;
+   instructionAddresses[1].bytes = 3;
+   instructionAddresses[2].bytes = 5;
+   instructionAddresses[3].bytes = 5;
+
+   initialized = false;
+}
+
+Patcher::~Patcher() {
+    if ((gameProcess) && (gameProcess != INVALID_HANDLE_VALUE)) {
+        CloseHandle(gameProcess);
+    }
+}
+
+void Patcher::init() {
+    if (initialized) {
+        throw std::runtime_error("Patcher already initialized.");
+    }
+    initialized = true;
+
     std::string procName = "WizardGraphicalClient.exe";
     std::string modName = "WizardGraphicalClient.exe";
 
@@ -46,17 +99,7 @@ Patcher::Patcher() {
     gameProcess = hProcess;
     gameBaseAddr = reinterpret_cast<uintptr_t>(baseaddr);
 
-     /* First cam struct field pointerchain:
-    * BA:   ["WizardGraphicalClient.exe" + 0x34e1908] = a0
-    * OFF0: [a0 + 0x80] = a1
-    * OFF1: [a1 + 0x1e8] = a2
-    * OFF2: [a2 + 0x288] = a3
-    * OFF3: [a3 + 0x80] = a4
-    * OFF4: [a4 + 0x9a8] = a5
-    * OFF5: [a5 + 0x180] = a6
-    * OFF6: [a6 + 0x6c] = a7 
-    */
-
+   
    /**
     * Traversing the pointer chain to retieve the first field of wiz's camera struct 
     * Last offset in the pointer offset chain should not be added and dereferenced
@@ -78,31 +121,6 @@ Patcher::Patcher() {
 
     camBaseAddr = tmp;
 
-    /*  INSTRUCTION MODIFYING X/Y:
-    * ["WizardGraphicalClient.exe" + 0x18298bd]; 5 bytes
-
-    * INSTRUCTION MODIFYING Z:
-    * ["WizardGraphicalClient.exe" + 0x18298c5]; 3 bytes
-
-    * INSTRUCTION MODIFYING PITCH:
-    * ["WizardGraphicalClient.exe" + 0x1829768]; 5 Bytes
-
-    * INSTRUCTION MODIFYING ROLL:
-    * N/A
-
-    * INSTRUCTION MODIFYING YAW:
-    * ["WizardGraphicalClient.exe" + 0x182968f]; 5 Bytes
-    */
-   instructionAddresses[0].offset = 0x18298bd;
-   instructionAddresses[1].offset = 0x18298c5;
-   instructionAddresses[2].offset = 0x1829768;
-   instructionAddresses[3].offset = 0x182968f;
-
-   instructionAddresses[0].bytes = 5;
-   instructionAddresses[1].bytes = 3;
-   instructionAddresses[2].bytes = 5;
-   instructionAddresses[3].bytes = 5;
-
 
     /* Reading the original instructions into instruction_t structs so patches can be reverted */
     for (auto& instr : instructionAddresses) {
@@ -111,13 +129,6 @@ Patcher::Patcher() {
             oss << "Patcher constructor failed: " << "Could not read instructions in process memory at address 0x" << std::hex << gameBaseAddr + instr.offset;
             throw std::runtime_error(oss.str());
         }
-    }
-   
-}
-
-Patcher::~Patcher() {
-    if (gameProcess) {
-        CloseHandle(gameProcess);
     }
 }
 
