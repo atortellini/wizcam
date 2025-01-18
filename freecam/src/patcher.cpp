@@ -96,6 +96,7 @@ void Patcher::init() {
         throw std::runtime_error(oss.str());
     }
     
+    gamePID = pid;
     gameProcess = hProcess;
     gameBaseAddr = reinterpret_cast<uintptr_t>(baseaddr);
 
@@ -134,43 +135,51 @@ void Patcher::init() {
 
 void Patcher::patch() { /* Might want to halt all threads before writing to .text pages and flushing instruction caches after. */
     BYTE patch[MAX_ENCODED_INSTRUCTION_LENGTH] = { NOP, NOP, NOP, NOP, NOP };
+
     try {
+        ProcessUtils::HaltAllProcessThreads(gamePID);
+
         for (const auto& instr : instructionAddresses) {
             ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPVOID>(gameBaseAddr + instr.offset), reinterpret_cast<LPCVOID>(patch), instr.bytes, PAGE_EXECUTE_READWRITE);
         }
+
+        /* FlushInstructionCache args:
+        * hProcess      - gameProcess
+        * lpBaseAddress - smallest instruction address modified from instructionAddresses arr
+        * dwSize        - (max_instruction_address - min_instruction_address) + max_instruction_address.bytes 
+        */
+        if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[3].offset), (instructionAddresses[1].offset - instructionAddresses[3].offset) + instructionAddresses[1].bytes )) {
+            throw std::runtime_error("Failed to flush instruction cache.");
+        }
+        ProcessUtils::ResumeAllProcessThreads(gamePID);
     } catch (std::runtime_error& e) {
         std::ostringstream oss;
         oss << "Applying patch failed: " << e.what();
         throw std::runtime_error(oss.str());
     }
-
-    /* FlushInstructionCache args:
-     * hProcess      - gameProcess
-     * lpBaseAddress - smallest instruction address modified from instructionAddresses arr
-     * dwSize        - (max_instruction_address - min_instruction_address) + max_instruction_address.bytes 
-     */
-    if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[3].offset), (instructionAddresses[1].offset - instructionAddresses[3].offset) + instructionAddresses[1].bytes )) {
-        throw std::runtime_error("Applying patch failed: Failed to flush instruction cache.");
-    }
 }
 
 void Patcher::unpatch() {
     try {
+        ProcessUtils::HaltAllProcessThreads(gamePID);
         for (const auto& instr : instructionAddresses) {
             ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPVOID>(gameBaseAddr + instr.offset), reinterpret_cast<LPCVOID>(instr.orig_instr), instr.bytes, PAGE_EXECUTE_READWRITE);
         }
+    
+        /** 
+         * FlushInstructionCache args:
+         * hProcess      - gameProcess
+         * lpBaseAddress - smallest instruction address modified from instructionAddresses arr
+         * dwSize        - (max_instruction_address - min_instruction_address) + max_instruction_address.bytes 
+         */
+        if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[3].offset), (instructionAddresses[1].offset - instructionAddresses[3].offset) + instructionAddresses[1].bytes )) {
+            throw std::runtime_error("Failed to flush instruction cache.");
+        }
+        ProcessUtils::ResumeAllProcessThreads(gamePID);
     } catch (std::runtime_error& e) {
         std::ostringstream oss;
         oss << "Removing patch failed: " << e.what();
         throw std::runtime_error(oss.str());
-    }
-     /* FlushInstructionCache args:
-     * hProcess      - gameProcess
-     * lpBaseAddress - smallest instruction address modified from instructionAddresses arr
-     * dwSize        - (max_instruction_address - min_instruction_address) + max_instruction_address.bytes 
-     */
-    if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[3].offset), (instructionAddresses[1].offset - instructionAddresses[3].offset) + instructionAddresses[1].bytes )) {
-        throw std::runtime_error("Removing patch failed: Failed to flush instruction cache.");
     }
 }
 

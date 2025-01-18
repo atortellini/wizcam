@@ -14,6 +14,7 @@ class Patcher {
 private:
     bool initialized;                   ///< Tracks whether the Patcher has been successfully initialized.
 
+    DWORD gamePID;                      ///< Wiz's PID.
     HANDLE gameProcess;                 ///< Handle to Wiz.
     uintptr_t gameBaseAddr;             ///< Base address of the Wiz's module in its process' address space.
     uintptr_t camBaseAddr;              ///< Base address of the camera struct.
