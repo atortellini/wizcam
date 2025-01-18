@@ -57,17 +57,24 @@ Patcher::Patcher() {
     * OFF6: [a6 + 0x6c] = a7 
     */
 
-   /* Traversing the pointer chain to retieve the first field of wiz's camera struct */
+   /**
+    * Traversing the pointer chain to retieve the first field of wiz's camera struct 
+    * Last offset in the pointer offset chain should not be added and dereferenced
+    * as the last offset is the offset of the first field of the cam struct from the
+    * base class address stored in the heap.
+    */
     uintptr_t tmp = gameBaseAddr;
 
-    for (uintptr_t offset : POINTER_OFFSET_CHAIN) {
-        tmp += offset;
+    for (size_t i=0;i<std::size(POINTER_OFFSET_CHAIN)-1;i++) {
+        tmp += POINTER_OFFSET_CHAIN[i];
         if (!ReadProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(tmp), reinterpret_cast<LPVOID>(&tmp), sizeof(tmp), NULL)) {
             std::ostringstream oss;
             oss << "Patcher constructor failed: " << "Failed traversing pointer chain.\n" << "Could not read process memory at address 0x" << std::hex << tmp << ". Offset 0x" << offset;
             throw std::runtime_error(oss.str());
         }
     }
+
+    tmp += POINTER_OFFSET_CHAIN[std::size(POINTER_OFFSET_CHAIN)-1];
 
     camBaseAddr = tmp;
 
