@@ -4,7 +4,7 @@
 #include <cstdint>
 
 #define MAX_ENCODED_INSTRUCTION_LENGTH 8
-#define NUM_INSTRUCTIONS_TO_UPDATE 4
+#define NUM_INSTRUCTIONS_TO_UPDATE 6
 
 /**
  * @class Patcher

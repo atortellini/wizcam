@@ -19,25 +19,27 @@ namespace {
      * OFF5: [a5 + 0x180] = a6
      * OFF6:  a6 + 0x06c  = a7 
      */
-    constexpr uintptr_t BASE_OFFSET = 0x34e1908;
-    constexpr uintptr_t OFFSET_0 = 0x80;
-    constexpr uintptr_t OFFSET_1 = 0x1e8;
-    constexpr uintptr_t OFFSET_2 = 0x288;
-    constexpr uintptr_t OFFSET_3 = 0x150;
-    constexpr uintptr_t OFFSET_4 = 0xe0;
-    constexpr uintptr_t OFFSET_5 = 0x348;
-    constexpr uintptr_t OFFSET_6 = 0x6c;
+    constexpr uintptr_t CAM_BASE_OFFSET = 0x34e1908;
+    constexpr uintptr_t CAM_OFFSET_0 = 0x80;
+    constexpr uintptr_t CAM_OFFSET_1 = 0x1e8;
+    constexpr uintptr_t CAM_OFFSET_2 = 0x288;
+    constexpr uintptr_t CAM_OFFSET_3 = 0x150;
+    constexpr uintptr_t CAM_OFFSET_4 = 0xe0;
+    constexpr uintptr_t CAM_OFFSET_5 = 0x348;
+    constexpr uintptr_t CAM_OFFSET_6 = 0x6c;
 
-    constexpr uintptr_t POINTER_OFFSET_CHAIN[] = { BASE_OFFSET, OFFSET_0, OFFSET_1, OFFSET_2, OFFSET_3, OFFSET_4, OFFSET_5, OFFSET_6 };
+    constexpr uintptr_t POINTER_OFFSET_CHAIN[] = { CAM_BASE_OFFSET, CAM_OFFSET_0, CAM_OFFSET_1, CAM_OFFSET_2, CAM_OFFSET_3, CAM_OFFSET_4, CAM_OFFSET_5, CAM_OFFSET_6 };
 }
 
 Patcher::Patcher() {
    
    /*  INSTRUCTION MODIFYING X/Y:
     * ["WizardGraphicalClient.exe" + 0x18298bd]; 5 bytes
+    * ["WizardGraphicalClient.exe" + 0x18298a9]; 5 bytes
 
     * INSTRUCTION MODIFYING Z:
     * ["WizardGraphicalClient.exe" + 0x18298c5]; 3 bytes
+    * ["WizardGraphicalClient.exe" + 0x18298b1]; 3 bytes
 
     * INSTRUCTION MODIFYING PITCH:
     * ["WizardGraphicalClient.exe" + 0x1829768]; 5 Bytes
@@ -49,15 +51,12 @@ Patcher::Patcher() {
     * ["WizardGraphicalClient.exe" + 0x182968f]; 5 Bytes
     */
 
-   instructionAddresses[0].offset = 0x18298bd;
-   instructionAddresses[1].offset = 0x18298c5;
-   instructionAddresses[2].offset = 0x1829768;
-   instructionAddresses[3].offset = 0x182968f;
-
-   instructionAddresses[0].bytes = 5;
-   instructionAddresses[1].bytes = 3;
-   instructionAddresses[2].bytes = 5;
-   instructionAddresses[3].bytes = 8;
+   instructionAddresses[0] = { 0x18298bd, 5 };
+   instructionAddresses[1] = { 0x18298a9, 5 };
+   instructionAddresses[2] = { 0x18298c5, 3 };
+   instructionAddresses[3] = { 0x18298b1, 3 };
+   instructionAddresses[4] = { 0x1829768, 5 };
+   instructionAddresses[5] = { 0x182968f, 8 };
 
    initialized = false;
 }
@@ -148,7 +147,7 @@ void Patcher::patch() { /* Might want to halt all threads before writing to .tex
         * lpBaseAddress - smallest instruction address modified from instructionAddresses arr
         * dwSize        - (max_instruction_address - min_instruction_address) + max_instruction_address.bytes 
         */
-        if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[3].offset), (instructionAddresses[1].offset - instructionAddresses[3].offset) + instructionAddresses[1].bytes )) {
+        if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[5].offset), (instructionAddresses[2].offset - instructionAddresses[5].offset) + instructionAddresses[2].bytes )) {
             throw std::runtime_error("Failed to flush instruction cache.");
         }
         ProcessUtils::ResumeAllProcessThreads(gamePID);
@@ -172,7 +171,7 @@ void Patcher::unpatch() {
          * lpBaseAddress - smallest instruction address modified from instructionAddresses arr
          * dwSize        - (max_instruction_address - min_instruction_address) + max_instruction_address.bytes 
          */
-        if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[3].offset), (instructionAddresses[1].offset - instructionAddresses[3].offset) + instructionAddresses[1].bytes )) {
+        if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[5].offset), (instructionAddresses[2].offset - instructionAddresses[5].offset) + instructionAddresses[2].bytes )) {
             throw std::runtime_error("Failed to flush instruction cache.");
         }
         ProcessUtils::ResumeAllProcessThreads(gamePID);
