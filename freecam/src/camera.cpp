@@ -13,7 +13,7 @@ void Camera::syncFromGame() {
     try { 
         patcher.retrieveCamData(&tmpCameraData, sizeof(tmpCameraData));
     } catch (std::runtime_error& e) {
-        std::cerr < e.what() << std::endl;
+        std::cerr << e.what() << std::endl;
     }
     camlock.lock();
     localCameraData = tmpCameraData;
@@ -77,7 +77,7 @@ void Camera::moveRoll(float droll) {
     camlock.unlock();
 }
 
-void Camera::printState() const {
+void Camera::printState() {
     camlock.lock();
     printf("Camera position: (%f, %f, %f)\n", localCameraData.x, localCameraData.y, localCameraData.z);
     printf("Camera rotation: (Pitch: %f, Yaw: %f, Roll: %f)\n", localCameraData.pitch, localCameraData.yaw, localCameraData.roll);

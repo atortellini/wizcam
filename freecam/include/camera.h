@@ -39,5 +39,5 @@ class Camera {
     void moveYaw(float dyaw);
 
     /* Function for debugging */
-    void printState() const;
-}
+    void printState();
+};
