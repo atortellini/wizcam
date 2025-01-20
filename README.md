@@ -39,6 +39,19 @@
 - Calculate a forward vector for the camera and base movement on it for more intuitive controls.
 - Capture mouse input to adjust pitch and yaw dynamically.
 
+### Possible Solution:
+- The game's native behavior allows pitch and yaw adjustments when the left mouse button is held and the mouse is moved. However:  
+  - Holding the left mouse button also causes the camera's x, y, and z coordinates to reset to the player’s position.  
+  - This snapping behavior disrupts freecam movement.  
+- **Potential Fix**:  
+  - NOP the instructions responsible for resetting the camera's x, y, and z coordinates to the player’s position when the left mouse button is held.  
+  - This would anchor the camera’s position to the freecam coordinates while still enabling pitch and yaw adjustments via the native controls.  
+
+### Advantages of This Approach:
+- Simplifies implementation by leveraging the game’s native pitch and yaw handling.  
+- Eliminates the need to add pitch and yaw management to the local `GameCamera` struct, as these values would be handled by the game.  
+- Improves overall usability while minimizing complexity.
+ 
 ---
 
 ## ISSUE: Input handling is poor
