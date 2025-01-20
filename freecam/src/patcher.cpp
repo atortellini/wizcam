@@ -36,10 +36,12 @@ Patcher::Patcher() {
    /*  INSTRUCTION MODIFYING X/Y:
     * ["WizardGraphicalClient.exe" + 0x18298bd]; 5 bytes
     * ["WizardGraphicalClient.exe" + 0x18298a9]; 5 bytes
+    * ["WizardGraphicalClient.exe" + 0x1829ce7]; 5 bytes
 
     * INSTRUCTION MODIFYING Z:
     * ["WizardGraphicalClient.exe" + 0x18298c5]; 3 bytes
     * ["WizardGraphicalClient.exe" + 0x18298b1]; 3 bytes
+    * ["WizardGraphicalClient.exe" + 0x1829cec]; 3 bytes
 
     * INSTRUCTION MODIFYING PITCH:
     * ["WizardGraphicalClient.exe" + 0x1829768]; 5 Bytes
@@ -48,16 +50,20 @@ Patcher::Patcher() {
     * N/A
 
     * INSTRUCTION MODIFYING YAW:
-    * ["WizardGraphicalClient.exe" + 0x182968f]; 5 Bytes
+    * ["WizardGraphicalClient.exe" + 0x182968f]; 8 Bytes
     */
 
-   instructionAddresses[0] = { 0x18298bd, 5 };
-   instructionAddresses[1] = { 0x18298a9, 5 };
-   instructionAddresses[2] = { 0x18298c5, 3 };
-   instructionAddresses[3] = { 0x18298b1, 3 };
-   instructionAddresses[4] = { 0x1829768, 5 };
-   instructionAddresses[5] = { 0x182968f, 8 };
-
+   instructionAddresses = {
+        { 0x18298bd, 5 },
+        { 0x18298a9, 5 },
+        { 0x1829ce7, 5 },
+        { 0x18298c5, 3 },
+        { 0x18298b1, 3 },
+        { 0x1829cec, 3 },
+        { 0x1829768, 5 },
+        { 0x182968f, 8 }
+    };
+   
    initialized = false;
 }
 
@@ -147,7 +153,7 @@ void Patcher::patch() { /* Might want to halt all threads before writing to .tex
         * lpBaseAddress - smallest instruction address modified from instructionAddresses arr
         * dwSize        - (max_instruction_address - min_instruction_address) + max_instruction_address.bytes 
         */
-        if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[5].offset), (instructionAddresses[2].offset - instructionAddresses[5].offset) + instructionAddresses[2].bytes )) {
+        if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[7].offset), (instructionAddresses[5].offset - instructionAddresses[7].offset) + instructionAddresses[5].bytes )) {
             throw std::runtime_error("Failed to flush instruction cache.");
         }
         ProcessUtils::ResumeAllProcessThreads(gamePID);
@@ -171,7 +177,7 @@ void Patcher::unpatch() {
          * lpBaseAddress - smallest instruction address modified from instructionAddresses arr
          * dwSize        - (max_instruction_address - min_instruction_address) + max_instruction_address.bytes 
          */
-        if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[5].offset), (instructionAddresses[2].offset - instructionAddresses[5].offset) + instructionAddresses[2].bytes )) {
+        if (!FlushInstructionCache(gameProcess, reinterpret_cast<LPCVOID>(instructionAddresses[7].offset), (instructionAddresses[5].offset - instructionAddresses[7].offset) + instructionAddresses[5].bytes )) {
             throw std::runtime_error("Failed to flush instruction cache.");
         }
         ProcessUtils::ResumeAllProcessThreads(gamePID);
