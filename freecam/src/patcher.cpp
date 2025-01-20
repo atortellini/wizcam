@@ -1,5 +1,6 @@
 #include "patcher.h"
 #include "processutils.h"
+#include "MinHook.h"
 
 #include <stdexcept>
 #include <iostream>
@@ -29,6 +30,13 @@ namespace {
     constexpr uintptr_t CAM_OFFSET_6 = 0x6c;
 
     constexpr uintptr_t POINTER_OFFSET_CHAIN[] = { CAM_BASE_OFFSET, CAM_OFFSET_0, CAM_OFFSET_1, CAM_OFFSET_2, CAM_OFFSET_3, CAM_OFFSET_4, CAM_OFFSET_5, CAM_OFFSET_6 };
+
+    typedef LRESULT (WINAPI* DispatchMessageA_t)(const MSG* lpMsg);
+    DispatchMessageA_t OriginalDispatchMesageA = nullptr;
+}
+
+LRESULT WINAPI HookedDispatchMessageA(const MSG* lpMsg) {
+
 }
 
 Patcher::Patcher() {
@@ -65,6 +73,9 @@ Patcher::~Patcher() {
     if ((gameProcess) && (gameProcess != INVALID_HANDLE_VALUE)) {
         CloseHandle(gameProcess);
     }
+    if (initialized) {
+        MH_Uninitialize();
+    }
 }
 
 void Patcher::init() {
@@ -72,10 +83,19 @@ void Patcher::init() {
         throw std::runtime_error("Patcher already initialized.");
     }
     initialized = true;
+    MH_Initialize();
+
+    std::wstring hookedModule = L"USER32.DLL";
+    std::string hookedFunc = "DispatchMessageA";
+
+    MH_CreateHookApiEx(hookedModule, hookedFunc, HookedDispatchMessageA, &OriginalDispatchMesageA);
+
+
 
     std::string procName = "WizardGraphicalClient.exe";
     std::string modName = "WizardGraphicalClient.exe";
 
+   
     DWORD pid;
     BYTE *baseaddr;
     
@@ -138,6 +158,8 @@ void Patcher::patch() { /* Might want to halt all threads before writing to .tex
     try {
         ProcessUtils::HaltAllProcessThreads(gamePID);
 
+        MH_EnableHook();
+
         for (const auto& instr : instructionAddresses) {
             ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPVOID>(gameBaseAddr + instr.offset), reinterpret_cast<LPCVOID>(patch), instr.bytes, PAGE_EXECUTE_READWRITE);
         }
@@ -161,6 +183,9 @@ void Patcher::patch() { /* Might want to halt all threads before writing to .tex
 void Patcher::unpatch() {
     try {
         ProcessUtils::HaltAllProcessThreads(gamePID);
+
+        MH_DisableHook();
+        
         for (const auto& instr : instructionAddresses) {
             ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPVOID>(gameBaseAddr + instr.offset), reinterpret_cast<LPCVOID>(instr.orig_instr), instr.bytes, PAGE_EXECUTE_READWRITE);
         }
