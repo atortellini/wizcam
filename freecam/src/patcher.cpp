@@ -53,16 +53,14 @@ Patcher::Patcher() {
     * ["WizardGraphicalClient.exe" + 0x182968f]; 8 Bytes
     */
 
-   instructionAddresses = {
-        { 0x18298bd, 5 },
-        { 0x18298a9, 5 },
-        { 0x1829ce7, 5 },
-        { 0x18298c5, 3 },
-        { 0x18298b1, 3 },
-        { 0x1829cec, 3 },
-        { 0x1829768, 5 },
-        { 0x182968f, 8 }
-    };
+   instructionAddresses[0] = { 0x18298bd, 5 };
+   instructionAddresses[1] = { 0x18298a9, 5 };
+   instructionAddresses[2] = { 0x1829ce7, 5 };
+   instructionAddresses[3] = { 0x18298c5, 3 };
+   instructionAddresses[4] = { 0x18298b1, 3 };
+   instructionAddresses[5] = { 0x1829cec, 3 };
+   instructionAddresses[6] = { 0x1829768, 5 };
+   instructionAddresses[7] = { 0x182968f, 8 };
    
    initialized = false;
 }
