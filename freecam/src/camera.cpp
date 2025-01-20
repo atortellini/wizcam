@@ -56,6 +56,7 @@ void Camera::moveZ(float dz) {
     camlock.unlock();
 }
 
+/*   BEING HANDLED BY GAME NATIVELY
 void Camera::movePitch(float dpitch) {
     camlock.lock();
     localCameraData.pitch += dpitch;
@@ -76,10 +77,10 @@ void Camera::moveRoll(float droll) {
     dirtycam.store(true);
     camlock.unlock();
 }
-
+*/
 void Camera::printState() {
     camlock.lock();
     printf("Camera position: (%f, %f, %f)\n", localCameraData.x, localCameraData.y, localCameraData.z);
-    printf("Camera rotation: (Pitch: %f, Yaw: %f, Roll: %f)\n", localCameraData.pitch, localCameraData.yaw, localCameraData.roll);
+    /* printf("Camera rotation: (Pitch: %f, Yaw: %f, Roll: %f)\n", localCameraData.pitch, localCameraData.yaw, localCameraData.roll); */
     camlock.unlock();
 }

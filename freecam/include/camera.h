@@ -16,7 +16,7 @@ class Camera {
 
     struct GameCamera {
         float x, y, z;
-        float pitch, roll, yaw;
+        /* float pitch, roll, yaw;    Removed these fields as the pitch and yaw can be natively handled by the game. */
     } localCameraData;
     
     public:
@@ -34,10 +34,11 @@ class Camera {
     void moveX(float dx);
     void moveY(float dy);
     void moveZ(float dz);
+    /* HANDLED BY GAME NATIVELY NOW
     void movePitch(float dpitch);
     void moveRoll(float droll);
     void moveYaw(float dyaw);
-
+    */
     /* Function for debugging */
     void printState();
 };
