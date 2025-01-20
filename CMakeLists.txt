@@ -20,5 +20,5 @@ add_executable(freecam
     freecam/src/camera.cpp
     freecam/src/patcher.cpp
 )
-
+target_link_libraries(freecam PRIVATE shared)
 target_include_directories(freecam PRIVATE freecam/include)
