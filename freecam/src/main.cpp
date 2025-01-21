@@ -20,19 +20,19 @@ void processInput(Patcher& p, Camera& cam) {
     bool current_cam_toggle = freecamEnabled.load();
     while (running) {
         if (GetAsyncKeyState(VK_F8) & 0x8000) {
-            bool new_state = !current_cam_toggle;
-            freecamEnabled.store(new_state); 
+            bool new_state = !current_cam_toggle; 
             current_cam_toggle = new_state;
             try {
                 if (current_cam_toggle) {
                     p.patch();
+                    cam.syncFromGame();
                 } else {
                     p.unpatch();
-                    cam.syncFromGame();
                 }
             } catch (std::runtime_error& e) {
                 std::cerr << e.what() << std::endl;
             }
+            freecamEnabled.store(new_state);
         }
         if (current_cam_toggle) {
             if (GetAsyncKeyState('W') & 0x8000) cam.moveForward(WRITEBACK_RATE_S);
