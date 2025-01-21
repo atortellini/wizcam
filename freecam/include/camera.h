@@ -6,19 +6,21 @@
 #include <mutex>
 
 
-#define CAM_MOVE_SPEED 40.
-
 class Camera {
     private:
     Patcher& patcher;
     std::mutex camlock;
     std::atomic<bool> dirtycam;
+    float camspeed;
 
     struct GameCamera {
         float x, y, z;
-        /* float pitch, roll, yaw;    Removed these fields as the pitch and yaw can be natively handled by the game. */
+        float pitch, roll, yaw;
     } localCameraData;
     
+    glm::vec3 calculateForwardVector();
+    glm::vec3 calculateRightVector();
+
     public:
     Camera(Patcher& p);
 
@@ -31,9 +33,12 @@ class Camera {
      * Very basic/rudimentary movement system 
      * TODO: Implement better movement of camera using its forward vector 
      */
-    void moveX(float dx);
-    void moveY(float dy);
-    void moveZ(float dz);
+    void moveForward(float dt);
+    void moveBackward(float dt);
+    void moveLeft(float dt);
+    void moveRight(float dt);
+    void moveUp(float dt);
+    void moveDown(float dt);
     /* HANDLED BY GAME NATIVELY NOW
     void movePitch(float dpitch);
     void moveRoll(float droll);
