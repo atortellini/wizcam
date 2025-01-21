@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+set(GLM_DIR /vendor/glm/glm/)
+
 add_library(shared STATIC
     shared/src/processutils.cpp
 )
@@ -21,4 +23,4 @@ add_executable(freecam
     freecam/src/patcher.cpp
 )
 target_link_libraries(freecam PRIVATE shared)
-target_include_directories(freecam PRIVATE freecam/include)
+target_include_directories(freecam PRIVATE freecam/include ${GLM_DIR})
