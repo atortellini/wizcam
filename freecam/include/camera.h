@@ -4,7 +4,7 @@
 
 #include <atomic>
 #include <mutex>
-
+#include "vec3.hpp"
 
 class Camera {
     private:
@@ -14,7 +14,7 @@ class Camera {
     float camspeed;
 
     struct GameCamera {
-        float x, y, z;
+        float x, z, y;
         float pitch, roll, yaw;
     } localCameraData;
     
