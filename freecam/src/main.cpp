@@ -7,11 +7,10 @@
 #include <thread>
 #include <atomic>
 
+#define WRITEBACK_RATE_MS 33
+#define DEBOUNCE_PERIOD_MS 33
 namespace {
-    constexpr float WRITEBACK_RATE_MS = 33;
-    constexpr float WRITEBACK_RATE_S = WRITEBACK_RATE_MS / 1000;
-
-    constexpr float DEBOUNCE_PERIOD_MS = 33;
+    constexpr float WRITEBACK_RATE_S = WRITEBACK_RATE_MS / 1000.0f;
 }
 
 std::atomic<bool> running = true;
@@ -29,6 +28,7 @@ void processInput(Patcher& p, Camera& cam) {
                     p.patch();
                 } else {
                     p.unpatch();
+                    cam.syncFromGame();
                 }
             } catch (std::runtime_error& e) {
                 std::cerr << e.what() << std::endl;
