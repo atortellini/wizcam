@@ -5,9 +5,9 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <glm/vec3.hpp>
-#include <glm/geometric.hpp>
-#include <glm/trigonometric.hpp>
+#include "vec3.hpp"
+#include "geometric.hpp"
+#include "trigonometric.hpp"
 
 Camera::Camera(Patcher& p) : patcher(p), camspeed(40.) {}
 
@@ -40,7 +40,6 @@ void Camera::syncToGame() {
     }
 }
 
-/* https://gamedev.stackexchange.com/questions/190054/how-to-calculate-the-forward-up-right-vectors-using-the-rotation-angles */
 glm::vec3 Camera::calculateForwardVector() { 
     float cyaw, cpitch;
     camlock.lock();
@@ -48,16 +47,16 @@ glm::vec3 Camera::calculateForwardVector() {
     cpitch = localCameraData.pitch;
     camlock.unlock();
     glm::vec3 forward;
-    forward.x = cos(glm::radians(cpitch)) * sin(glm::radians(cyaw));
-    forward.y = sin(glm::radians(cpitch));
-    forward.z = cos(glm::radians(cpitch)) * cos(glm::radians(cyaw));
-    return glm::normalize(forward);
+    forward.x = cos(cpitch) * sin(cyaw);
+    forward.y = -sin(cpitch);
+    forward.z = cos(cpitch) * cos(cyaw);
+    return forward;
 }
 
 glm::vec3 Camera::calculateRightVector() {
     float cyaw;
     camlock.lock();
-    cyaw = localCameraData.yaw
+    cyaw = localCameraData.yaw;
     camlock.unlock();
     glm::vec3 right;
     right.x = cos(glm::radians(cyaw));
@@ -68,26 +67,26 @@ glm::vec3 Camera::calculateRightVector() {
 
 void Camera::moveForward(float dt) {
     glm::vec3 forward = calculateForwardVector();
-    float dx = dt * camspeed * forward.x;
-    float dy = dt * camspeed * forward.y;
-    float dz = dt * camspeed * forward.z;
+    float dx = camspeed * forward.x;
+    float dy = camspeed * forward.y;
+    float dz = camspeed * forward.z;
     camlock.lock();
-    localCameraData.x += dx;
+    localCameraData.x -= dx;
     localCameraData.y += dy;
-    localCameraData.z += dz;
+    localCameraData.z -= dz;
     dirtycam.store(true);
     camlock.unlock();
 }
 
 void Camera::moveBackward(float dt) {
     glm::vec3 forward = calculateForwardVector();
-    float dx = dt * camspeed * forward.x;
-    float dy = dt * camspeed * forward.y;
-    float dz = dt * camspeed * forward.z;
+    float dx = camspeed * forward.x;
+    float dy = camspeed * forward.y;
+    float dz = camspeed * forward.z;
     camlock.lock();
-    localCameraData.x -= dx;
+    localCameraData.x += dx;
     localCameraData.y -= dy;
-    localCameraData.z -= dz;
+    localCameraData.z += dz;
     dirtycam.store(true);
     camlock.unlock();
 }
@@ -116,14 +115,14 @@ void Camera::moveRight(float dt) { /* y coordinate is ignored */
 
 void Camera::moveUp(float dt) {
     camlock.lock();
-    localCameraData.z += dt * camspeed;
+    localCameraData.y += camspeed;
     dirtycam.store(true);
     camlock.unlock();
 }
 
 void Camera::moveDown(float dt) {
     camlock.lock();
-    localCameraData.z -= dt * camspeed;
+    localCameraData.y -= camspeed;
     dirtycam.store(true);
     camlock.unlock();
 }
