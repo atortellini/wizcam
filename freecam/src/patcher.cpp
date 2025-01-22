@@ -19,7 +19,7 @@ namespace {
      * OFF5: [a5 + 0x180] = a6
      * OFF6:  a6 + 0x06c  = a7 
      */
-    constexpr uintptr_t CAM_BASE_OFFSET = 0x34e1908;
+    constexpr uintptr_t CAM_BASE_OFFSET = 0x34d89f8;
     constexpr uintptr_t CAM_OFFSET_0 = 0x80;
     constexpr uintptr_t CAM_OFFSET_1 = 0x1e8;
     constexpr uintptr_t CAM_OFFSET_2 = 0x288;
@@ -29,39 +29,56 @@ namespace {
     constexpr uintptr_t CAM_OFFSET_6 = 0x6c;
 
     constexpr uintptr_t POINTER_OFFSET_CHAIN[] = { CAM_BASE_OFFSET, CAM_OFFSET_0, CAM_OFFSET_1, CAM_OFFSET_2, CAM_OFFSET_3, CAM_OFFSET_4, CAM_OFFSET_5, CAM_OFFSET_6 };
+
+    /**
+     * INSTRUCTION MODIFYING X/Z:
+     * ["WizardGraphicalClient.exe" + 0x182c97d]; 5 bytes  NORMAL UPDATES
+     * ["WizardGraphicalClient.exe" + 0x182c969]; 5 bytes  PLAYER COLLISION
+     * ["WizardGraphicalClient.exe" + 0x182cda7]; 5 bytes  HOLDING LEFT MOUSE BUTTON
+
+     * INSTRUCTION MODIFYING Y:
+     * NORMAL UPDATES X/Z     + 8; 3 bytes                 NORMAL UPDATES
+     * PLAYER COLLISION X/Z   + 8; 3 bytes                 PLAYER COLLISION
+     * HOLDING LEFT MOUSE X/Z + 5; 3 bytes                 HOLDING LEFT MOUSE
+
+     * INSTRUCTION MODIFYING PITCH:
+     * ["WizardGraphicalClient.exe" + 0x182c828]; 5 Bytes  RESETS PITCH
+
+     * INSTRUCTION MODIFYING ROLL:
+     * N/A
+
+     * INSTRUCTION MODIFYING YAW:
+     * ["WizardGraphicalClient.exe" + 0x182c74f]; 8 Bytes  RESETS YAW
+     */
+
+    constexpr size_t     INSTR_XZ_SIZE = 5;
+    constexpr size_t      INSTR_Y_SIZE = 3;
+    constexpr size_t    INSTR_PCH_SIZE = 5;
+    constexpr size_t    INSTR_YAW_SIZE = 8;
+
+    constexpr uintptr_t OFF_INSTR_NORM_XZ = 0x182c97d;
+    constexpr uintptr_t OFF_INSTR_COLL_XZ = 0x182c969;
+    constexpr uintptr_t OFF_INSTR_HOLD_XZ = 0x182cda7;
+    
+    constexpr uintptr_t OFF_INSTR_NORM_Y  = OFF_INSTR_NORM_XZ + INSTR_XZ_SIZE + 3;
+    constexpr uintptr_t OFF_INSTR_COLL_Y  = OFF_INSTR_COLL_XZ + INSTR_XZ_SIZE + 3;
+    constexpr uintptr_t OFF_INSTR_HOLD_Y  = OFF_INSTR_HOLD_XZ + INSTR_XZ_SIZE;
+
+    constexpr uintptr_t OFF_INSTR_RST_PCH = 0x182c828;
+    constexpr uintptr_t OFF_INSTR_RST_YAW = 0x182c74f;
 }
 
 Patcher::Patcher() {
-   
-   /*  INSTRUCTION MODIFYING X/Y:
-    * ["WizardGraphicalClient.exe" + 0x18298bd]; 5 bytes
-    * ["WizardGraphicalClient.exe" + 0x18298a9]; 5 bytes
-    * ["WizardGraphicalClient.exe" + 0x1829ce7]; 5 bytes
+    
+   instructionAddresses[0] = { OFF_INSTR_NORM_XZ, INSTR_XZ_SIZE };
+   instructionAddresses[1] = { OFF_INSTR_COLL_XZ, INSTR_XZ_SIZE };
+   instructionAddresses[2] = { OFF_INSTR_HOLD_XZ, INSTR_XZ_SIZE };
+   instructionAddresses[3] = {  OFF_INSTR_NORM_Y, INSTR_Y_SIZE };
+   instructionAddresses[4] = {  OFF_INSTR_COLL_Y, INSTR_Y_SIZE };
+   instructionAddresses[5] = {  OFF_INSTR_HOLD_Y, INSTR_Y_SIZE };
+   instructionAddresses[6] = { OFF_INSTR_RST_PCH, INSTR_PCH_SIZE };
+   instructionAddresses[7] = { OFF_INSTR_RST_YAW, INSTR_YAW_SIZE };
 
-    * INSTRUCTION MODIFYING Z:
-    * ["WizardGraphicalClient.exe" + 0x18298c5]; 3 bytes
-    * ["WizardGraphicalClient.exe" + 0x18298b1]; 3 bytes
-    * ["WizardGraphicalClient.exe" + 0x1829cec]; 3 bytes
-
-    * INSTRUCTION MODIFYING PITCH:
-    * ["WizardGraphicalClient.exe" + 0x1829768]; 5 Bytes
-
-    * INSTRUCTION MODIFYING ROLL:
-    * N/A
-
-    * INSTRUCTION MODIFYING YAW:
-    * ["WizardGraphicalClient.exe" + 0x182968f]; 8 Bytes
-    */
-
-   instructionAddresses[0] = { 0x18298bd, 5 };
-   instructionAddresses[1] = { 0x18298a9, 5 };
-   instructionAddresses[2] = { 0x1829ce7, 5 };
-   instructionAddresses[3] = { 0x18298c5, 3 };
-   instructionAddresses[4] = { 0x18298b1, 3 };
-   instructionAddresses[5] = { 0x1829cec, 3 };
-   instructionAddresses[6] = { 0x1829768, 5 };
-   instructionAddresses[7] = { 0x182968f, 8 };
-   
    initialized = false;
 }
 
