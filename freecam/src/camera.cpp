@@ -59,10 +59,10 @@ glm::vec3 Camera::calculateRightVector() {
     cyaw = localCameraData.yaw;
     camlock.unlock();
     glm::vec3 right;
-    right.x = cos(glm::radians(cyaw));
+    right.x = cos(cyaw);
     right.y = 0;
-    right.z = -sin(glm::radians(cyaw));
-    return glm::normalize(right);
+    right.z = -sin(cyaw);
+    return right;
 }
 
 void Camera::moveForward(float dt) {
@@ -93,22 +93,22 @@ void Camera::moveBackward(float dt) {
 
 void Camera::moveLeft(float dt) { /* y coordinate is ignored */
     glm::vec3 right = calculateRightVector();
-    float dx = dt * camspeed * right.x;
-    float dz = dt * camspeed * right.z;
+    float dx = camspeed * right.x;
+    float dz = camspeed * right.z;
     camlock.lock();
-    localCameraData.x -= dx;
-    localCameraData.z -= dz;
+    localCameraData.x += dx;
+    localCameraData.z += dz;
     dirtycam.store(true);
     camlock.unlock();
 }
 
 void Camera::moveRight(float dt) { /* y coordinate is ignored */
     glm::vec3 right = calculateRightVector();
-    float dx = dt * camspeed * right.x;
-    float dz = dt * camspeed * right.z;
+    float dx = camspeed * right.x;
+    float dz = camspeed * right.z;
     camlock.lock();
-    localCameraData.x += dx;
-    localCameraData.z += dz;
+    localCameraData.x -= dx;
+    localCameraData.z -= dz;
     dirtycam.store(true);
     camlock.unlock();
 }
