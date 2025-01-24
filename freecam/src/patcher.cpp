@@ -212,7 +212,7 @@ void Patcher::retrieveCamCoordinates(void *buff, size_t nSize) const {
 }
 
 void Patcher::retrieveCamPitchYaw(void *buff, size_t nSize) const {
-    if (!ReadProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(camBaseAddr) + 12, buff, 12, NULL)) {
+    if (!ReadProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(camBaseAddr + 12), buff, 12, NULL)) {
         std::ostringstream oss;
         oss << "Failed to retrieve camera data: " << "Could not read camera data in process memory at address 0x" << std::hex << camBaseAddr;
         throw std::runtime_error(oss.str());
