@@ -14,7 +14,7 @@ Camera::Camera(Patcher& p) : patcher(p), camspeed(40.) {}
 void Camera::syncFromGame() {
     struct GameCamera tmpCameraData;
     try { 
-        patcher.retrieveCamData(&tmpCameraData, sizeof(tmpCameraData));
+        patcher.retrieveCamCoordinates(&tmpCameraData, sizeof(tmpCameraData));
     } catch (std::runtime_error& e) {
         std::ostringstream oss;
         oss << "Camera failed to sync: " << e.what();
@@ -41,6 +41,7 @@ void Camera::syncToGame() {
 }
 
 glm::vec3 Camera::calculateForwardVector() { 
+    patcher.retrieveCamPitchYaw(&tmpCameraData.pitch, 12);
     float cyaw, cpitch;
     camlock.lock();
     cyaw = localCameraData.yaw;
@@ -54,6 +55,7 @@ glm::vec3 Camera::calculateForwardVector() {
 }
 
 glm::vec3 Camera::calculateRightVector() {
+    patcher.retrieveCamPitchYaw(&tmpCameraData.pitch, 12);
     float cyaw;
     camlock.lock();
     cyaw = localCameraData.yaw;

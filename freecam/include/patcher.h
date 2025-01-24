@@ -83,7 +83,9 @@ public:
      * @param nSize Size of the buffer (number of bytes to read).
      * @throws std::runtime_error if the memory read operation fails.
      */
-    void retrieveCamData(void* buff, size_t nSize) const;
+    void retrieveCamCoordinates(void* buff, size_t nSize) const;
+
+    void retrieveCamPitchYaw(void* buff, size_t nSize) const;
 
     /**
      * @brief Writes data to Wiz's camera struct.

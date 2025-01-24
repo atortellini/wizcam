@@ -203,8 +203,16 @@ void Patcher::unpatch() {
     }
 }
 
-void Patcher::retrieveCamData(void *buff, size_t nSize) const {
-    if (!ReadProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(camBaseAddr), buff, nSize, NULL)) {
+void Patcher::retrieveCamCoordinates(void *buff, size_t nSize) const {
+    if (!ReadProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(camBaseAddr), buff, 12, NULL)) {
+        std::ostringstream oss;
+        oss << "Failed to retrieve camera data: " << "Could not read camera data in process memory at address 0x" << std::hex << camBaseAddr;
+        throw std::runtime_error(oss.str());
+    }
+}
+
+void Patcher::retrieveCamPitchYaw(void *buff, size_t nSize) const {
+    if (!ReadProcessMemory(gameProcess, reinterpret_cast<LPCVOID>(camBaseAddr) + 12, buff, 12, NULL)) {
         std::ostringstream oss;
         oss << "Failed to retrieve camera data: " << "Could not read camera data in process memory at address 0x" << std::hex << camBaseAddr;
         throw std::runtime_error(oss.str());
@@ -213,7 +221,7 @@ void Patcher::retrieveCamData(void *buff, size_t nSize) const {
 
 void Patcher::setCamData(const void *buff, size_t nSize) const {
     try {
-        ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPVOID>(camBaseAddr), buff, nSize, PAGE_READWRITE); // This memory region isn't protected anyways so calling protected write is unnecessary.
+        ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPVOID>(camBaseAddr), buff, 12, PAGE_READWRITE); // This memory region isn't protected anyways so calling protected write is unnecessary.
     } catch (std::runtime_error& e) {
         std::ostringstream oss;
         oss << "Failed to set camera data: " << e.what();
