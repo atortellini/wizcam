@@ -26,6 +26,21 @@ void Camera::syncFromGame() {
     camlock.unlock();
 }
 
+void Camera::syncFromGameYaw() {
+    struct GameCamera tmpCameraData;
+    try { 
+        patcher.retrieveCamPitchYaw(&tmpCameraData.pitch, 12);
+    } catch (std::runtime_error& e) {
+        std::ostringstream oss;
+        oss << "Camera failed to sync: " << e.what();
+        throw std::runtime_error(oss.str());
+    }
+    camlock.lock();
+    localCameraData.pitch = tmpCameraData.pitch;
+    localCameraData.yaw = tmpCameraData.yaw;
+    camlock.unlock();
+}
+
 void Camera::syncToGame() {
     if (dirtycam.load()) {
         camlock.lock();
@@ -41,7 +56,7 @@ void Camera::syncToGame() {
 }
 
 glm::vec3 Camera::calculateForwardVector() { 
-    patcher.retrieveCamPitchYaw(&tmpCameraData.pitch, 12);
+    syncFromGameYaw();
     float cyaw, cpitch;
     camlock.lock();
     cyaw = localCameraData.yaw;
@@ -55,7 +70,7 @@ glm::vec3 Camera::calculateForwardVector() {
 }
 
 glm::vec3 Camera::calculateRightVector() {
-    patcher.retrieveCamPitchYaw(&tmpCameraData.pitch, 12);
+    syncFromGameYaw();
     float cyaw;
     camlock.lock();
     cyaw = localCameraData.yaw;

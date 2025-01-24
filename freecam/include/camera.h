@@ -20,7 +20,7 @@ class Camera {
     
     glm::vec3 calculateForwardVector();
     glm::vec3 calculateRightVector();
-
+    void syncFromGameYaw();
     public:
     Camera(Patcher& p);
 
