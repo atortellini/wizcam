@@ -213,7 +213,7 @@ void Patcher::retrieveCamData(void *buff, size_t nSize) const {
 
 void Patcher::setCamData(const void *buff, size_t nSize) const {
     try {
-        ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPVOID>(camBaseAddr), buff, nSize, PAGE_EXECUTE_READWRITE);
+        ProcessUtils::WriteProtectedProcessMemory(gameProcess, reinterpret_cast<LPVOID>(camBaseAddr), buff, nSize, PAGE_READWRITE); // This memory region isn't protected anyways so calling protected write is unnecessary.
     } catch (std::runtime_error& e) {
         std::ostringstream oss;
         oss << "Failed to set camera data: " << e.what();
