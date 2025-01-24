@@ -7,6 +7,12 @@
 #include <thread>
 #include <atomic>
 
+#define WRITEBACK_RATE_MS 33
+#define DEBOUNCE_PERIOD_MS 33
+namespace {
+    constexpr float WRITEBACK_RATE_S = WRITEBACK_RATE_MS / 1000.0f;
+}
+
 std::atomic<bool> running = true;
 std::atomic<bool> freecamEnabled = false;
 
@@ -14,28 +20,29 @@ void processInput(Patcher& p, Camera& cam) {
     bool current_cam_toggle = freecamEnabled.load();
     while (running) {
         if (GetAsyncKeyState(VK_F8) & 0x8000) {
-            bool new_state = !current_cam_toggle;
-            freecamEnabled.store(new_state); 
+            bool new_state = !current_cam_toggle; 
             current_cam_toggle = new_state;
             try {
                 if (current_cam_toggle) {
                     p.patch();
+                    cam.syncFromGame();
                 } else {
                     p.unpatch();
                 }
             } catch (std::runtime_error& e) {
                 std::cerr << e.what() << std::endl;
             }
+            freecamEnabled.store(new_state);
         }
         if (current_cam_toggle) {
-            if (GetAsyncKeyState('W') & 0x8000) cam.moveX(CAM_MOVE_SPEED);
-            if (GetAsyncKeyState('A') & 0x8000) cam.moveY(-CAM_MOVE_SPEED);
-            if (GetAsyncKeyState('S') & 0x8000) cam.moveX(-CAM_MOVE_SPEED);
-            if (GetAsyncKeyState('D') & 0x8000) cam.moveY(CAM_MOVE_SPEED);
-            if (GetAsyncKeyState(VK_SPACE) & 0x8000) cam.moveZ(CAM_MOVE_SPEED);
-            if (GetAsyncKeyState(VK_CONTROL) & 0x8000) cam.moveZ(-CAM_MOVE_SPEED);
+            if (GetAsyncKeyState('W') & 0x8000) cam.moveForward(WRITEBACK_RATE_S);
+            if (GetAsyncKeyState('A') & 0x8000) cam.moveLeft(WRITEBACK_RATE_S);
+            if (GetAsyncKeyState('S') & 0x8000) cam.moveBackward(WRITEBACK_RATE_S);
+            if (GetAsyncKeyState('D') & 0x8000) cam.moveRight(WRITEBACK_RATE_S);
+            if (GetAsyncKeyState(VK_SPACE) & 0x8000) cam.moveUp(WRITEBACK_RATE_S);
+            if (GetAsyncKeyState(VK_CONTROL) & 0x8000) cam.moveDown(WRITEBACK_RATE_S);
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(33));
+        std::this_thread::sleep_for(std::chrono::milliseconds(DEBOUNCE_PERIOD_MS));
         
     }
     std::this_thread::yield();
@@ -59,7 +66,7 @@ int main(void) {
         if (freecamEnabled.load()) {
             cam.syncToGame();
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(33));
+        std::this_thread::sleep_for(std::chrono::milliseconds(WRITEBACK_RATE_MS));
     }
 
     input_thread.join();
