@@ -1,0 +1,27 @@
+name: Build Wizcam
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Run CMake
+        run: |
+          cmake -S . -B build -A x64
+
+      - name: Build the project
+        run: |
+          cmake --build build --config Release --verbose
