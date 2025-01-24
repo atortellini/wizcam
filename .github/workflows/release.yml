@@ -1,0 +1,36 @@
+name: Wizcam Release Build
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+        
+      - name: Run CMake
+        run: |
+          cmake -S . -B build -A x64
+
+      - name: Build the project
+        run: |
+          cmake --build build --config Release
+      
+      - name: Archive binaries
+        run: |
+          mkdir release
+          cp build/bin/* release/
+          cd release
+          tar -czf WizCam-v${{ github.ref_name }}.tar.gz *
+        shell: bash
+
+      - name: Create Github Release
+        run: |
+        
